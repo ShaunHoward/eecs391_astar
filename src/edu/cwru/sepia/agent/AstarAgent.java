@@ -422,6 +422,8 @@ public class AstarAgent extends Agent {
             if (cheapestLocation.equals(goal)) {
                 return AstarPath(cheapestLocation);
             }
+
+            //Need to properly implement getting neighbors with fast runtime
             List<MapLocation> possibleLocations = cheapestLocation.getNeighborList();
 
             for (MapLocation location : possibleLocations) {
@@ -450,9 +452,31 @@ public class AstarAgent extends Agent {
         return 0;
     }
 
-    //Needs to be implemented
-    private Stack<MapLocation> AstarPath(MapLocation cheapestLocation) {
-        return null;
+    /**
+     * Returns the A* path to the given end location
+     * from the beginning location of the map.
+     *
+     * @param end - the location to get the A* path to
+     * from the beginning location
+     * @return the stack of locations from the beginning of the
+     * map (top of stack) to the end of the map (bottom of stack)
+     */
+    public static Stack<MapLocation> AstarPath(MapLocation end) {
+
+        Stack<MapLocation> astarPath = new Stack<>();
+
+        MapLocation curr = end;
+
+        astarPath.push(curr);
+
+        while (curr.getPrevious() != null) {
+
+            curr = curr.getPrevious();
+
+            astarPath.push(curr);
+        }
+
+        return astarPath;
     }
 
     /**
