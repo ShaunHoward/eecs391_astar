@@ -13,15 +13,134 @@ import java.util.*;
 
 public class AstarAgent extends Agent {
 
-    class MapLocation
+    class MapLocation implements Comparable<MapLocation>
     {
-        public int x, y;
+        public int x = 0, y = 0;
+        public MapLocation previous = null;
+        public float cost = 0;
+        private float distanceFromBeginning = 0;
+        private float heuristic = 0;
+        private List<MapLocation> neighborList = new ArrayList<>();
 
-        public MapLocation(int x, int y, MapLocation cameFrom, float cost)
+        public MapLocation(int x, int y, MapLocation previous, float cost)
         {
             this.x = x;
             this.y = y;
+            this.previous = previous;
+            this.cost = cost;
         }
+
+        public void setPrevious(MapLocation previous) {
+            this.previous = previous;
+        }
+
+        public MapLocation getPrevious() {
+            return previous;
+        }
+
+        public void setDistanceFromBeginning(float distanceFromBeginning) {
+            this.distanceFromBeginning = distanceFromBeginning;
+        }
+
+        public float getDistanceFromBeginning() {
+            return distanceFromBeginning;
+        }
+
+        public void setHeuristic(float heuristic) {
+            this.heuristic = heuristic;
+        }
+
+        public float getHeuristic() {
+            return heuristic;
+        }
+
+        public List<MapLocation> getNeighborList() {
+            return neighborList;
+        }
+
+        public void setNeighborList(List<MapLocation> neighborList) {
+            this.neighborList = neighborList;
+        }
+
+        public void setCost(float cost) {
+            this.cost = cost;
+        }
+
+        public float getCost() {
+            return cost;
+        }
+
+        /**
+         * Compares locations by their cost. Utilizes
+         * the Java compareTo() for Floats.
+         *
+         * @param location - the location to compare to this location
+         * @return the comparison of the locations by cost
+         */
+        @Override
+        final public int compareTo(MapLocation location) {
+            Float thisCost = new Float(this.getCost());
+            Float locationCost = new Float(location.getCost());
+            return thisCost.compareTo(locationCost);
+        }
+
+        /**
+         * Gets the coordinates of this location as a string.
+         *
+         * @return - the coordinates <x,y></x,y> of this location as a string
+         */
+        public String getCoordinateString() {
+            return "<" + this.x + ", " + this.y + ">";
+        }
+
+        /**
+         * Determines whether two locations are the same based on their costs,
+         * x, and y coordinates.
+         *
+         * @param location - the location to compare with this location
+         * @return whether the the locations are the same
+         */
+        public boolean sameLocation(MapLocation location) {
+            if (this.x == location.x
+                    && this.y == location.y
+                    && this.getCost() == location.getCost()) {
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Determines whether two locations are equal based on their costs,
+         * x, and y coordinates.
+         *
+         * @param o - the object to compare with this location
+         * @return whether the input object is equivalent to this location
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (o != null && o instanceof MapLocation) {
+                MapLocation l = (MapLocation) o;
+                if (sameLocation(l)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Hash code for this location. Generated based on
+         * x, y coordinates and cost of this location.
+         *
+         * @return the hash code of this location
+         */
+        @Override
+        public int hashCode() {
+            int result = (cost != +0.0f ? Float.floatToIntBits(cost) : 0);
+            result = 31 * result + x;
+            result = 31 * result + y;
+            return result;
+        }
+
     }
 
     Stack<MapLocation> path;
@@ -248,55 +367,92 @@ public class AstarAgent extends Agent {
 
         return AstarSearch(startLoc, goalLoc, state.getXExtent(), state.getYExtent(), footmanLoc, resourceLocations);
     }
+
     /**
      * This is the method you will implement for the assignment. Your implementation
      * will use the A* algorithm to compute the optimum path from the start position to
      * a position adjacent to the goal position.
-     *
+     * <p/>
      * You will return a Stack of positions with the top of the stack being the first space to move to
      * and the bottom of the stack being the last space to move to. If there is no path to the townhall
      * then return null from the method and the agent will print a message and do nothing.
      * The code to execute the plan is provided for you in the middleStep method.
-     *
+     * <p/>
      * As an example consider the following simple map
-     *
+     * <p/>
      * F - - - -
      * x x x - x
      * H - - - -
-     *
+     * <p/>
      * F is the footman
      * H is the townhall
      * x's are occupied spaces
-     *
+     * <p/>
      * xExtent would be 5 for this map with valid X coordinates in the range of [0, 4]
      * x=0 is the left most column and x=4 is the right most column
-     *
+     * <p/>
      * yExtent would be 3 for this map with valid Y coordinates in the range of [0, 2]
      * y=0 is the top most row and y=2 is the bottom most row
-     *
+     * <p/>
      * resourceLocations would be {(0,1), (1,1), (2,1), (4,1)}
-     *
+     * <p/>
      * The path would be
-     *
+     * <p/>
      * (1,0)
      * (2,0)
      * (3,1)
      * (2,2)
      * (1,2)
-     *
+     * <p/>
      * Notice how the initial footman position and the townhall position are not included in the path stack
      *
-     * @param start Starting position of the footman
-     * @param goal MapLocation of the townhall
-     * @param xExtent Width of the map
-     * @param yExtent Height of the map
+     * @param start             Starting position of the footman
+     * @param goal              MapLocation of the townhall
+     * @param xExtent           Width of the map
+     * @param yExtent           Height of the map
      * @param resourceLocations Set of positions occupied by resources
      * @return Stack of positions with top of stack being first move in plan
      */
-    private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations)
-    {
+    private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
+        Set<MapLocation> expandedLocations = new HashSet<>();
+        PriorityQueue<MapLocation> openLocations = new PriorityQueue<>();
+
+        while (!openLocations.isEmpty()) {
+            MapLocation cheapestLocation = openLocations.poll();
+            if (cheapestLocation.equals(goal)) {
+                return AstarPath(cheapestLocation);
+            }
+            List<MapLocation> possibleLocations = cheapestLocation.getNeighborList();
+
+            for (MapLocation location : possibleLocations) {
+                if (!expandedLocations.contains(location)) {
+                    location.setPrevious(cheapestLocation);
+                    location.setDistanceFromBeginning(distanceBetweenLocations(start, location));
+                    location.setHeuristic(distanceBetweenLocations(location, goal));
+                    location.setCost(location.getDistanceFromBeginning() + location.getHeuristic());
+                    expandedLocations.add(location);
+                    openLocations.add(location);
+                }
+            }
+        }
+
         // return an empty path
-        return new Stack<MapLocation>();
+        return null;
+    }
+
+    //Chebyshev distance
+    private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
+        if (beginning != null && end != null) {
+            float xDiff = Math.abs(end.x - beginning.x);
+            float yDiff = Math.abs(end.y - beginning.y);
+            return Math.max(xDiff, yDiff);
+        }
+        return 0;
+    }
+
+    //Needs to be implemented
+    private Stack<MapLocation> AstarPath(MapLocation cheapestLocation) {
+        return null;
     }
 
     /**
