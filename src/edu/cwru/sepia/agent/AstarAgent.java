@@ -13,11 +13,6 @@ import java.util.*;
 
 public class AstarAgent extends Agent {
 
-    int length = 0;
-    int width = 0;
-
-    Map<Position, MapLocation> locations = new HashMap<>();
-
     class MapLocation implements Comparable<MapLocation>
     {
         // The x and y coordinates of this location.
@@ -318,91 +313,96 @@ public class AstarAgent extends Agent {
         }
     }
 
-    /**
-     * Sets the neighbor locations of each location in the
-     * map. At this point, the map does not determine
-     * if the locations are connected by planks. This will
-     * be set by the user with the linkMapLocations() method.
-     */
-    void setNeighbors(int xExtent, int yExtent) {
-        MapLocation location;
-        /*
-        * Find all the neighbors of a selected location
-        * at the given position in the map and add
-        * them to the map of neighbors for that location.
-        * Null neighbors will not be added to the map.
-        */
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < length; j++) {
-                location = locations.get(new Position(j, i));
-                location.addNeighbor(getVerticalMapLocation(location, false), false);
-                location.addNeighbor(getVerticalMapLocation(location, true), false);
-                location.addNeighbor(getHorizontalMapLocation(location, true), false);
-                location.addNeighbor(getHorizontalMapLocation(location, false), false);
+    public class AgentMap {
+        int length = 0;
+        int width = 0;
+
+        Map<Position, MapLocation> locations = new HashMap<>();
+        /**
+         * Sets the neighbor locations of each location in the
+         * map. At this point, the map does not determine
+         * if the locations are connected by planks. This will
+         * be set by the user with the linkMapLocations() method.
+         */
+        void setNeighbors(int xExtent, int yExtent) {
+            MapLocation location;
+            /*
+            * Find all the neighbors of a selected location
+            * at the given position in the map and add
+            * them to the map of neighbors for that location.
+            * Null neighbors will not be added to the map.
+            */
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < length; j++) {
+                    location = locations.get(new Position(j, i));
+                    location.addNeighbor(getVerticalMapLocation(location, false), false);
+                    location.addNeighbor(getVerticalMapLocation(location, true), false);
+                    location.addNeighbor(getHorizontalMapLocation(location, true), false);
+                    location.addNeighbor(getHorizontalMapLocation(location, false), false);
+                }
+            }
+        }
+
+        /**
+         * Gets the location above or below the given location, otherwise
+         * returns null.
+         *
+         * @param location - the location to find above or below the
+         * current location
+         * @param above - if this location is above the current location
+         * @return the location above or below the current location
+         */
+        public MapLocation getVerticalMapLocation(MapLocation location, boolean above) {
+            int x = location.getX();
+            int y = location.getY();
+            MapLocation vertical = null;
+            if (y > 0 && !above) {
+                vertical = locations.get(new Position(x, y - 1));
+            } else if (y < length && above) {
+                vertical = locations.get(new Position(x, y + 1));
+            }
+            return vertical;
+        }
+        /**
+         * Gets the location left or right of the given location, otherwise
+         * returns null.
+         *
+         * @param location - the location to find left or right of the
+         * current location
+         * @param left - if this location is left of the current location
+         * @return the location left or right of the current location
+         */
+        public MapLocation getHorizontalMapLocation(MapLocation location, boolean left) {
+            int x = location.getX();
+            int y = location.getY();
+            MapLocation horizontal = null;
+            if (x > 0 && !left) {
+                horizontal = locations.get(new Position(x - 1, y));
+            } else if (x < width && left) {
+                horizontal = locations.get(new Position(x + 1, y));
+            }
+            return horizontal;
+        }
+        /**
+         * Links the start location to the end location
+         * with a unidirectional plank.
+         *
+         * @param startPos - the position of the location to start the plank
+         * @param endPos - the position of the location to end the plank
+         * @throws Exception - when the locations at either position are null
+         */
+        public void linkMapLocations(Position startPos, Position endPos) throws Exception {
+            MapLocation start = locations.get(startPos);
+            MapLocation end = locations.get(endPos);
+            if(start == null || end == null){
+                throw new Exception("Map locations were null, no path was found.");
+            };
+            Map<MapLocation, Boolean> neighbors = start.getNeighbors();
+            if (neighbors.containsKey(end)) {
+                neighbors.put(end, true);
             }
         }
     }
-
-    /**
-     * Gets the location above or below the given location, otherwise
-     * returns null.
-     *
-     * @param location - the location to find above or below the
-     * current location
-     * @param above - if this location is above the current location
-     * @return the location above or below the current location
-     */
-    public MapLocation getVerticalMapLocation(MapLocation location, boolean above) {
-        int x = location.getX();
-        int y = location.getY();
-        MapLocation vertical = null;
-        if (y > 0 && !above) {
-            vertical = locations.get(new Position(x, y - 1));
-        } else if (y < length && above) {
-            vertical = locations.get(new Position(x, y + 1));
-        }
-        return vertical;
-    }
-    /**
-     * Gets the location left or right of the given location, otherwise
-     * returns null.
-     *
-     * @param location - the location to find left or right of the
-     * current location
-     * @param left - if this location is left of the current location
-     * @return the location left or right of the current location
-     */
-    public MapLocation getHorizontalMapLocation(MapLocation location, boolean left) {
-        int x = location.getX();
-        int y = location.getY();
-        MapLocation horizontal = null;
-        if (x > 0 && !left) {
-            horizontal = locations.get(new Position(x - 1, y));
-        } else if (x < width && left) {
-            horizontal = locations.get(new Position(x + 1, y));
-        }
-        return horizontal;
-    }
-    /**
-     * Links the start location to the end location
-     * with a unidirectional plank.
-     *
-     * @param startPos - the position of the location to start the plank
-     * @param endPos - the position of the location to end the plank
-     * @throws Exception - when the locations at either position are null
-     */
-    public void linkMapLocations(Position startPos, Position endPos) throws Exception {
-        MapLocation start = locations.get(startPos);
-        MapLocation end = locations.get(endPos);
-        if(start == null || end == null){
-            throw new Exception("Map locations were null, no path was found.");
-        };
-        Map<MapLocation, Boolean> neighbors = start.getNeighbors();
-        if (neighbors.containsKey(end)) {
-            neighbors.put(end, true);
-        }
-    }
-
 
     Stack<MapLocation> path;
     int footmanID, townhallID, enemyFootmanID;
@@ -670,7 +670,7 @@ public class AstarAgent extends Agent {
      * @param start             Starting position of the footman
      * @param goal              MapLocation of the townhall
      * @param xExtent           Width of the map
-     * @param yExtent           Height of the map
+     * @param yExtent           Length of the map
      * @param resourceLocations Set of positions occupied by resources
      * @return Stack of positions with top of stack being first move in plan
      */
