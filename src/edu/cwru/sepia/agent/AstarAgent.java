@@ -13,15 +13,59 @@ import java.util.*;
 
 public class AstarAgent extends Agent {
 
+    int length = 0;
+    int width = 0;
+
+    Map<Position, MapLocation> locations = new HashMap<>();
+
     class MapLocation implements Comparable<MapLocation>
     {
-        public int x = 0, y = 0;
-        public MapLocation previous = null;
-        public float cost = 0;
-        private float distanceFromBeginning = 0;
-        private float heuristic = 0;
-        private List<MapLocation> neighborList = new ArrayList<>();
+        // The x and y coordinates of this location.
+        int x = 0, y = 0;
 
+        // The previously visited map location.
+        MapLocation previous = null;
+
+        // The cost to reach this location.
+        float cost = 0;
+
+        // The distance of this location from the initial location.
+        float distanceFromBeginning = 0;
+
+        // The estimated distance to the end of the path.
+        float heuristic = 0;
+
+        // A map of neighbors, reachable and unreachable.
+        Map<MapLocation, Boolean> neighbors = new HashMap<>();
+
+        /**
+         * Gets the x-coordinate of this location.
+         *
+         * @return the x-coordinate of this location
+         */
+        public int getX() {
+            return x;
+        }
+
+        /**
+         * Gets the y-coordinate of this location.
+         *
+         * @return the y-coordinate of this location
+         */
+        public int getY() {
+            return y;
+        }
+
+        /**
+         * Constructor for a map location based on x,y coordinates,
+         * a previously visited map location, and the cost to reach
+         * this location.
+         *
+         * @param x - the x coordinate on the map of this location
+         * @param y - the y coordinate on the map of this location
+         * @param previous - the previously visited location
+         * @param cost - - the cost to reach this location
+         */
         public MapLocation(int x, int y, MapLocation previous, float cost)
         {
             this.x = x;
@@ -30,42 +74,119 @@ public class AstarAgent extends Agent {
             this.cost = cost;
         }
 
+        /**
+         * Sets the previously visited location.
+         *
+         * @param previous - the previously visited location
+         */
         public void setPrevious(MapLocation previous) {
             this.previous = previous;
         }
 
+        /**
+         * Gets the previously visited location.
+         *
+         * @return the previously visited location
+         */
         public MapLocation getPrevious() {
             return previous;
         }
 
+        /**
+         * Sets the distance from the beginning location.
+         *
+         * @param distanceFromBeginning - the distance from the beginning location
+         */
         public void setDistanceFromBeginning(float distanceFromBeginning) {
             this.distanceFromBeginning = distanceFromBeginning;
         }
 
+        /**
+         * Gets the distance from the beginning location.
+         *
+         * @return the distance from the beginning location
+         */
         public float getDistanceFromBeginning() {
             return distanceFromBeginning;
         }
 
+
+        /**
+         * Sets the heuristic distance to the end location.
+         *
+         * @param heuristic - the heuristic distance to the end location
+         */
         public void setHeuristic(float heuristic) {
             this.heuristic = heuristic;
         }
 
+        /**
+         * Gets the heuristic distance to the end location.
+         *
+         * @return the heuristic distance to the end location
+         */
         public float getHeuristic() {
             return heuristic;
         }
 
-        public List<MapLocation> getNeighborList() {
+        /**
+         * Adds a neighbor location to this location.
+         *
+         * @param neighbor - the neighbor location to add
+         * @param isConnected - whether the neighbor is connected
+         */
+        public void addNeighbor(MapLocation neighbor, boolean isConnected) {
+            if (neighbor != null) {
+                this.neighbors.put(neighbor, isConnected);
+            }
+        }
+
+        /**
+         * Gets the neighbor locations of this location.
+         *
+         * @return the neighbor locations of this location
+         */
+        public Map<MapLocation, Boolean> getNeighbors() {
+            return neighbors;
+        }
+
+        /**
+         * Gets a list of neighbors, which are either
+         * connected or disconnected as determined by the
+         * entered boolean value.
+         *
+         * @param connected - whether to get connected neighbors
+         * @return connected or disconnected neighbors of this location
+         */
+        public List<MapLocation> getNeighborList(boolean connected) {
+            // The list of neighbors of this location.
+            List<MapLocation> neighborList = new ArrayList<>(neighbors.keySet());
+            Iterator<MapLocation> listItr = neighborList.iterator();
+            MapLocation curr = null;
+            // Remove any neighbors not matching connected boolean in map.
+            while (listItr.hasNext()) {
+                curr = listItr.next();
+                if (neighbors.containsKey(curr) && neighbors.get(curr).booleanValue() != connected) {
+                    listItr.remove();
+                }
+            }
             return neighborList;
         }
 
-        public void setNeighborList(List<MapLocation> neighborList) {
-            this.neighborList = neighborList;
-        }
-
+        /**
+         * Sets the cost of this location.
+         *
+         * @param cost - the cost of this location
+         */
         public void setCost(float cost) {
             this.cost = cost;
         }
 
+        /**
+         * Gets the cost of this location.
+         *
+         * @return the cost of this location
+         */
         public float getCost() {
             return cost;
         }
@@ -87,7 +208,7 @@ public class AstarAgent extends Agent {
         /**
          * Gets the coordinates of this location as a string.
          *
-         * @return - the coordinates <x,y></x,y> of this location as a string
+         * @return - the coordinates <x,y> of this location as a string
          */
         public String getCoordinateString() {
             return "<" + this.x + ", " + this.y + ">";
@@ -142,6 +263,146 @@ public class AstarAgent extends Agent {
         }
 
     }
+
+    /**
+     * Holds the position of locations in the map.
+     */
+    public static class Position {
+
+        /* the x-coordinate of a location. */
+        int x = 0;
+
+        /* the y-coordinate of a location. */
+        int y = 0;
+
+        /**
+         * Constructs a position from x and y coordinates.
+         *
+         * @param x - the x-coordinate in the map
+         * @param y - the y-coordinate in the map
+         */
+        Position(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        /**
+         * Compares this position with another object.
+         * The two positions are equal if their
+         * x and y coordinates are equivalent.
+         *
+         * @param o - the object to compare with this position
+         * @return whether the two objects are equivalent
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (o != null && o instanceof Position) {
+                Position p = (Position) o;
+                if (this.x == p.x && this.y == p.y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        /**
+         * The hash code for this position is based on
+         * x and y coordinates.
+         *
+         * @return the hash code for this position
+         */
+        @Override
+        public int hashCode() {
+            int result = x;
+            result = 31 * result + y;
+            return result;
+        }
+    }
+
+    /**
+     * Sets the neighbor locations of each location in the
+     * map. At this point, the map does not determine
+     * if the locations are connected by planks. This will
+     * be set by the user with the linkMapLocations() method.
+     */
+    void setNeighbors(int xExtent, int yExtent) {
+        MapLocation location;
+        /*
+        * Find all the neighbors of a selected location
+        * at the given position in the map and add
+        * them to the map of neighbors for that location.
+        * Null neighbors will not be added to the map.
+        */
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < length; j++) {
+                location = locations.get(new Position(j, i));
+                location.addNeighbor(getVerticalMapLocation(location, false), false);
+                location.addNeighbor(getVerticalMapLocation(location, true), false);
+                location.addNeighbor(getHorizontalMapLocation(location, true), false);
+                location.addNeighbor(getHorizontalMapLocation(location, false), false);
+            }
+        }
+    }
+
+    /**
+     * Gets the location above or below the given location, otherwise
+     * returns null.
+     *
+     * @param location - the location to find above or below the
+     * current location
+     * @param above - if this location is above the current location
+     * @return the location above or below the current location
+     */
+    public MapLocation getVerticalMapLocation(MapLocation location, boolean above) {
+        int x = location.getX();
+        int y = location.getY();
+        MapLocation vertical = null;
+        if (y > 0 && !above) {
+            vertical = locations.get(new Position(x, y - 1));
+        } else if (y < length && above) {
+            vertical = locations.get(new Position(x, y + 1));
+        }
+        return vertical;
+    }
+    /**
+     * Gets the location left or right of the given location, otherwise
+     * returns null.
+     *
+     * @param location - the location to find left or right of the
+     * current location
+     * @param left - if this location is left of the current location
+     * @return the location left or right of the current location
+     */
+    public MapLocation getHorizontalMapLocation(MapLocation location, boolean left) {
+        int x = location.getX();
+        int y = location.getY();
+        MapLocation horizontal = null;
+        if (x > 0 && !left) {
+            horizontal = locations.get(new Position(x - 1, y));
+        } else if (x < width && left) {
+            horizontal = locations.get(new Position(x + 1, y));
+        }
+        return horizontal;
+    }
+    /**
+     * Links the start location to the end location
+     * with a unidirectional plank.
+     *
+     * @param startPos - the position of the location to start the plank
+     * @param endPos - the position of the location to end the plank
+     * @throws Exception - when the locations at either position are null
+     */
+    public void linkMapLocations(Position startPos, Position endPos) throws Exception {
+        MapLocation start = locations.get(startPos);
+        MapLocation end = locations.get(endPos);
+        if(start == null || end == null){
+            throw new Exception("Map locations were null, no path was found.");
+        };
+        Map<MapLocation, Boolean> neighbors = start.getNeighbors();
+        if (neighbors.containsKey(end)) {
+            neighbors.put(end, true);
+        }
+    }
+
 
     Stack<MapLocation> path;
     int footmanID, townhallID, enemyFootmanID;
@@ -424,7 +685,7 @@ public class AstarAgent extends Agent {
             }
 
             //Need to properly implement getting neighbors with fast runtime
-            List<MapLocation> possibleLocations = cheapestLocation.getNeighborList();
+            List<MapLocation> possibleLocations = cheapestLocation.getNeighborList(true);
 
             for (MapLocation location : possibleLocations) {
                 if (!expandedLocations.contains(location)) {
