@@ -6,6 +6,7 @@ import edu.cwru.sepia.environment.model.state.ResourceNode;
 import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.util.Direction;
+import edu.cwru.sepia.util.DistanceMetrics;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,8 +14,10 @@ import java.util.*;
 
 public class AstarAgent extends Agent {
 
-    class MapLocation implements Comparable<MapLocation>
-    {
+    AgentMap agentMap;
+
+    class MapLocation implements Comparable<MapLocation>{
+
         // The x and y coordinates of this location.
         int x = 0, y = 0;
 
@@ -146,26 +149,155 @@ public class AstarAgent extends Agent {
         }
 
         /**
-         * Gets a list of neighbors, which are either
-         * connected or disconnected as determined by the
-         * entered boolean value.
+         * Gets a set of neighbors that are currently reachable from this
+         * current location.
          *
-         * @param connected - whether to get connected neighbors
-         * @return connected or disconnected neighbors of this location
+         * @param enemyLocation - the location of the enemy footman who blocks the path
+         * @param resourceLocations - the set of resource locations which are blocking the path
+         * @return connected neighbors of this location
          */
-        public List<MapLocation> getNeighborList(boolean connected) {
-            // The list of neighbors of this location.
-            List<MapLocation> neighborList = new ArrayList<>(neighbors.keySet());
-            Iterator<MapLocation> listItr = neighborList.iterator();
+        public Set<MapLocation> getReachableNeighbors(MapLocation enemyLocation, Set<MapLocation> resourceLocations, AgentMap map) {
+
+            Set<MapLocation> locations = getNeighbors(map);
+            Iterator<MapLocation> locationItr = locations.iterator();
             MapLocation curr = null;
-            // Remove any neighbors not matching connected boolean in map.
-            while (listItr.hasNext()) {
-                curr = listItr.next();
-                if (neighbors.containsKey(curr) && neighbors.get(curr).booleanValue() != connected) {
-                    listItr.remove();
+            // Remove any neighbors not reachable from this location.
+            while (locationItr.hasNext()) {
+                curr = locationItr.next();
+                if (resourceLocations.contains(curr) || enemyLocation.equals(curr)) {
+                    locationItr.remove();
                 }
             }
-            return neighborList;
+            return locations;
+        }
+
+        /**
+         * Gets the neighbors map locations of this map location as long as they
+         * exist on the given agent map.
+         *
+         * @param map - the agent map to search for neighbor locations of this location in
+         * @return the set of map locations neighboring this map location
+         */
+        public Set<MapLocation> getNeighbors(AgentMap map){
+            Set<MapLocation> neighbors = new HashSet<>();
+            neighbors.add(getNorthNeighbor(map));
+            neighbors.add(getSouthNeighbor(map));
+            neighbors.add(getEastNeighbor(map));
+            neighbors.add(getWestNeighbor(map));
+            neighbors.add(getNorthEastNeighbor(map));
+            neighbors.add(getNorthWestNeighbor(map));
+            neighbors.add(getSouthEastNeighbor(map));
+            neighbors.add(getSouthWestNeighbor(map));
+            if (neighbors.contains(null)){
+                neighbors.remove(null);
+            }
+            return neighbors;
+        }
+
+        /**
+         * Returns the map location southwest of this map location
+         * or null if the location is off of the map.
+         *
+         * @param map - the map to find the southwest neighbor in
+         * @return the southwest neighbor of this location
+         */
+        private MapLocation getSouthWestNeighbor(AgentMap map) {
+            //x - 1 & y + 1
+            int neighborX = this.x - 1;
+            int neighborY = this.y + 1;
+
+            // Check if the neighbor is within the x extent of the map.
+            if (map.getXExtent() > neighborX && neighborX >= 0) {
+                // Check if the neighbor is within the y extent of the map.
+                if (map.getYExtent() > neighborY && neighborY >= 0){
+                    return new MapLocation(neighborX, neighborY, this, 0);
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Returns the map location southeast of this map location
+         * or null if the location is off of the map.
+         *
+         * @param map - the map to find the southeast neighbor in
+         * @return the southeast neighbor of this location
+         */
+        private MapLocation getSouthEastNeighbor(AgentMap map) {
+            //x + 1 & y + 1
+            return null;
+        }
+
+        /**
+         * Returns the map location northwest of this map location
+         * or null if the location is off of the map.
+         *
+         * @param map - the map to find the northwest neighbor in
+         * @return the northwest neighbor of this location
+         */
+        private MapLocation getNorthWestNeighbor(AgentMap map) {
+            //x - 1 & y - 1
+            return null;
+        }
+
+        /**
+         * Returns the map location northeast of this map location
+         * or null if the location is off of the map.
+         *
+         * @param map - the map to find the northeast neighbor in
+         * @return the northeast neighbor of this location
+         */
+        private MapLocation getNorthEastNeighbor(AgentMap map) {
+            //x + 1 & y - 1
+            return null;
+        }
+
+        /**
+         * Returns the map location west of this map location
+         * or null if the location is off of the map.
+         *
+         * @param map - the map to find the west neighbor in
+         * @return the west neighbor of this location
+         */
+        private MapLocation getWestNeighbor(AgentMap map) {
+            //x - 1 & y
+            return null;
+        }
+
+        /**
+         * Returns the map location east of this map location
+         * or null if the location is off of the map.
+         *
+         * @param map - the map to find the east neighbor in
+         * @return the east neighbor of this location
+         */
+        private MapLocation getEastNeighbor(AgentMap map) {
+            //x + 1 & y
+            return null;
+        }
+
+        /**
+         * Returns the map location south of this map location
+         * or null if the location is off of the map.
+         *
+         * @param map - the map to find the south neighbor in
+         * @return the south neighbor of this location
+         */
+        private MapLocation getSouthNeighbor(AgentMap map) {
+            //x & y + 1
+            return null;
+        }
+
+        /**
+         * Returns the map location north of this map location
+         * or null if the location is off of the map.
+         *
+         * @param map - the map to find the north neighbor in
+         * @return the north neighbor of this location
+         */
+        private MapLocation getNorthNeighbor(AgentMap map) {
+            //x & y - 1
+            return null;
         }
 
         /**
@@ -259,148 +391,71 @@ public class AstarAgent extends Agent {
 
     }
 
-    /**
-     * Holds the position of locations in the map.
-     */
-    public static class Position {
-
-        /* the x-coordinate of a location. */
-        int x = 0;
-
-        /* the y-coordinate of a location. */
-        int y = 0;
-
-        /**
-         * Constructs a position from x and y coordinates.
-         *
-         * @param x - the x-coordinate in the map
-         * @param y - the y-coordinate in the map
-         */
-        Position(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        /**
-         * Compares this position with another object.
-         * The two positions are equal if their
-         * x and y coordinates are equivalent.
-         *
-         * @param o - the object to compare with this position
-         * @return whether the two objects are equivalent
-         */
-        @Override
-        public boolean equals(Object o) {
-            if (o != null && o instanceof Position) {
-                Position p = (Position) o;
-                if (this.x == p.x && this.y == p.y) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        /**
-         * The hash code for this position is based on
-         * x and y coordinates.
-         *
-         * @return the hash code for this position
-         */
-        @Override
-        public int hashCode() {
-            int result = x;
-            result = 31 * result + y;
-            return result;
-        }
-    }
-
     public class AgentMap {
-        int length = 0;
-        int width = 0;
+        /* the length of the maze by rows. */
+        int xExtent = 0;
+        /* the width of the maze by columns. */
+        int yExtent = 0;
+        /* the size of the maze by length times width. */
+        int size = 0;
+        /* the beginning location of the maze. */
+        MapLocation begin = null;
+        /* the ending location of the maze. */
+        MapLocation end = null;
 
-        Map<Position, MapLocation> locations = new HashMap<>();
-        /**
-         * Sets the neighbor locations of each location in the
-         * map. At this point, the map does not determine
-         * if the locations are connected by planks. This will
-         * be set by the user with the linkMapLocations() method.
-         */
-        void setNeighbors(int xExtent, int yExtent) {
-            MapLocation location;
-            /*
-            * Find all the neighbors of a selected location
-            * at the given position in the map and add
-            * them to the map of neighbors for that location.
-            * Null neighbors will not be added to the map.
-            */
-            for (int i = 0; i < width; i++) {
-                for (int j = 0; j < length; j++) {
-                    location = locations.get(new Position(j, i));
-                    location.addNeighbor(getVerticalMapLocation(location, false), false);
-                    location.addNeighbor(getVerticalMapLocation(location, true), false);
-                    location.addNeighbor(getHorizontalMapLocation(location, true), false);
-                    location.addNeighbor(getHorizontalMapLocation(location, false), false);
-                }
-            }
+        /* The location of the enemy footman on this map. */
+        MapLocation enemyFootmanLoc;
+
+        Set<MapLocation> resourceLocations = new HashSet<>();
+
+        public AgentMap(int xExtent, int yExtent, MapLocation agentStart, MapLocation agentStop, Set<MapLocation> resourceLocations){
+            this.xExtent = xExtent;
+            this.yExtent = yExtent;
+            this.begin = agentStart;
+            this.end = agentStop;
+            this.resourceLocations = resourceLocations;
         }
 
         /**
-         * Gets the location above or below the given location, otherwise
-         * returns null.
+         * Gets the beginning location of this maze.
          *
-         * @param location - the location to find above or below the
-         * current location
-         * @param above - if this location is above the current location
-         * @return the location above or below the current location
+         * @return the beginning location of this maze
          */
-        public MapLocation getVerticalMapLocation(MapLocation location, boolean above) {
-            int x = location.getX();
-            int y = location.getY();
-            MapLocation vertical = null;
-            if (y > 0 && !above) {
-                vertical = locations.get(new Position(x, y - 1));
-            } else if (y < length && above) {
-                vertical = locations.get(new Position(x, y + 1));
-            }
-            return vertical;
+        public MapLocation getBegin() {
+            return begin;
+        }
+
+        /**
+         * Gets the size of this maze.
+         *
+         * @return the size of this maze
+         */
+        public int size() {
+            return this.size;
         }
         /**
-         * Gets the location left or right of the given location, otherwise
-         * returns null.
+         * Gets the x extent of the maze.
          *
-         * @param location - the location to find left or right of the
-         * current location
-         * @param left - if this location is left of the current location
-         * @return the location left or right of the current location
+         * @return the x extent of the maze
          */
-        public MapLocation getHorizontalMapLocation(MapLocation location, boolean left) {
-            int x = location.getX();
-            int y = location.getY();
-            MapLocation horizontal = null;
-            if (x > 0 && !left) {
-                horizontal = locations.get(new Position(x - 1, y));
-            } else if (x < width && left) {
-                horizontal = locations.get(new Position(x + 1, y));
-            }
-            return horizontal;
+        public int getXExtent() {
+            return this.xExtent;
         }
         /**
-         * Links the start location to the end location
-         * with a unidirectional plank.
+         * Gets the y extent of the maze.
          *
-         * @param startPos - the position of the location to start the plank
-         * @param endPos - the position of the location to end the plank
-         * @throws Exception - when the locations at either position are null
+         * @return the y extent of the maze
          */
-        public void linkMapLocations(Position startPos, Position endPos) throws Exception {
-            MapLocation start = locations.get(startPos);
-            MapLocation end = locations.get(endPos);
-            if(start == null || end == null){
-                throw new Exception("Map locations were null, no path was found.");
-            };
-            Map<MapLocation, Boolean> neighbors = start.getNeighbors();
-            if (neighbors.containsKey(end)) {
-                neighbors.put(end, true);
-            }
+        public int getYExtent() {
+            return this.yExtent;
+        }
+
+        public void setEnemyLocation(MapLocation enemyFootmanLoc) {
+            this.enemyFootmanLoc = enemyFootmanLoc;
+        }
+
+        public MapLocation getEnemyLocation(){
+            return this.enemyFootmanLoc;
         }
     }
 
@@ -591,6 +646,30 @@ public class AstarAgent extends Agent {
      */
     private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath)
     {
+       // Unit.UnitView footmanUnit = state.getUnit(footmanID);
+       // MapLocation footmanLocation = new MapLocation(footmanUnit.getXPosition(), footmanUnit.getYPosition(), null, 0);
+        MapLocation enemyLocation;
+
+        if(enemyFootmanID != -1) {
+            Unit.UnitView enemyFootmanUnit = state.getUnit(enemyFootmanID);
+            enemyLocation = new MapLocation(enemyFootmanUnit.getXPosition(), enemyFootmanUnit.getYPosition(), null, 0);
+            //check if enemy is on path (via map location) and close to player's next move (i.e. distance <= 2)
+            return enemyBlockingPath(enemyLocation, currentPath);
+        }
+        return false;
+    }
+
+    //Wish there was a way to check if enemy was on path
+    private boolean enemyBlockingPath(MapLocation enemyLocation, Stack<MapLocation> currentPath){
+        MapLocation nextLocation = currentPath.peek();
+        MapLocation subsequentLocation = currentPath.elementAt(currentPath.size() - 2);
+        float enemyToNextLocation = distanceBetweenLocations(nextLocation, enemyLocation);
+        float enemyToSubsequentLocation = distanceBetweenLocations(subsequentLocation, enemyLocation);
+
+        //check if enemy is near the next location or subsequent location of footman along path
+        if (enemyToNextLocation <= 1 || enemyToSubsequentLocation <= 1){
+            return true;
+        }
         return false;
     }
 
@@ -677,6 +756,8 @@ public class AstarAgent extends Agent {
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
         Set<MapLocation> expandedLocations = new HashSet<>();
         PriorityQueue<MapLocation> openLocations = new PriorityQueue<>();
+        agentMap = new AgentMap(xExtent, yExtent, start, goal, resourceLocations);
+        agentMap.setEnemyLocation(enemyFootmanLoc);
 
         while (!openLocations.isEmpty()) {
             MapLocation cheapestLocation = openLocations.poll();
@@ -685,10 +766,10 @@ public class AstarAgent extends Agent {
             }
 
             //Need to properly implement getting neighbors with fast runtime
-            List<MapLocation> possibleLocations = cheapestLocation.getNeighborList(true);
+            Set<MapLocation> possibleLocations = cheapestLocation.getReachableNeighbors(enemyFootmanLoc, resourceLocations, agentMap);
 
             for (MapLocation location : possibleLocations) {
-                if (!expandedLocations.contains(location)) {
+                if (!expandedLocations.contains(location)) { //this may have to be amended
                     location.setPrevious(cheapestLocation);
                     location.setDistanceFromBeginning(distanceBetweenLocations(start, location));
                     location.setHeuristic(distanceBetweenLocations(location, goal));
@@ -706,9 +787,7 @@ public class AstarAgent extends Agent {
     //Chebyshev distance
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
-            float xDiff = Math.abs(end.x - beginning.x);
-            float yDiff = Math.abs(end.y - beginning.y);
-            return Math.max(xDiff, yDiff);
+            return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
         }
         return 0;
     }
