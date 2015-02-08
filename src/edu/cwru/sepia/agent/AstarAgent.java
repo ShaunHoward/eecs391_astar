@@ -225,6 +225,17 @@ public class AstarAgent extends Agent {
          */
         private MapLocation getSouthEastNeighbor(AgentMap map) {
             //x + 1 & y + 1
+            int neighborX = this.x + 1;
+            int neighborY = this.y + 1;
+            
+            //Check if the neighbor is within the x extent of the map.
+            if (map.getXExtent() > neighborX && neighborX >= 0) {
+            	//Check if the neighbor is within the y extent of the map
+            	if (map.getYExtent() > neighborY && neighborY > 0) {
+            		return new MapLocation(neighborX, neighborY, this, 0);
+            	}
+            }
+            
             return null;
         }
 
@@ -237,6 +248,17 @@ public class AstarAgent extends Agent {
          */
         private MapLocation getNorthWestNeighbor(AgentMap map) {
             //x - 1 & y - 1
+        	int neighborX = this.x - 1;
+            int neighborY = this.y - 1;
+            
+            //Check if the neighbor is within the x extent of the map.
+            if (map.getXExtent() > neighborX && neighborX >= 0) {
+            	//Check if the neighbor is within the y extent of the map
+            	if (map.getYExtent() > neighborY && neighborY > 0) {
+            		return new MapLocation(neighborX, neighborY, this, 0);
+            	}
+            }
+            
             return null;
         }
 
@@ -249,6 +271,17 @@ public class AstarAgent extends Agent {
          */
         private MapLocation getNorthEastNeighbor(AgentMap map) {
             //x + 1 & y - 1
+        	int neighborX = this.x + 1;
+            int neighborY = this.y - 1;
+            
+            //Check if the neighbor is within the x extent of the map.
+            if (map.getXExtent() > neighborX && neighborX >= 0) {
+            	//Check if the neighbor is within the y extent of the map
+            	if (map.getYExtent() > neighborY && neighborY > 0) {
+            		return new MapLocation(neighborX, neighborY, this, 0);
+            	}
+            }
+            
             return null;
         }
 
@@ -261,6 +294,13 @@ public class AstarAgent extends Agent {
          */
         private MapLocation getWestNeighbor(AgentMap map) {
             //x - 1 & y
+        	int neighborX = this.x - 1;
+            
+            //Check if the neighbor is within the x extent of the map.
+            if (map.getXExtent() > neighborX && neighborX >= 0) {
+            		return new MapLocation(neighborX, this.y, this, 0);
+            	}
+          
             return null;
         }
 
@@ -273,6 +313,13 @@ public class AstarAgent extends Agent {
          */
         private MapLocation getEastNeighbor(AgentMap map) {
             //x + 1 & y
+        	int neighborX = this.x + 1;
+            
+            //Check if the neighbor is within the x extent of the map.
+            if (map.getXExtent() > neighborX && neighborX >= 0) {
+            		return new MapLocation(neighborX, this.y, this, 0);
+            	}
+          
             return null;
         }
 
@@ -285,6 +332,13 @@ public class AstarAgent extends Agent {
          */
         private MapLocation getSouthNeighbor(AgentMap map) {
             //x & y + 1
+        	int neighborY = this.y + 1;
+            
+            //Check if the neighbor is within the y extent of the map.
+            if (map.getYExtent() > neighborY && neighborY >= 0) {
+            		return new MapLocation(this.x, neighborY, this, 0);
+            	}
+          
             return null;
         }
 
@@ -297,6 +351,13 @@ public class AstarAgent extends Agent {
          */
         private MapLocation getNorthNeighbor(AgentMap map) {
             //x & y - 1
+        	int neighborY = this.y - 1;
+            
+            //Check if the neighbor is within the y extent of the map.
+            if (map.getYExtent() > neighborY && neighborY >= 0) {
+            		return new MapLocation(this.x, neighborY, this, 0);
+            	}
+          
             return null;
         }
 
