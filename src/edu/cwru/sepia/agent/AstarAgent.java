@@ -614,6 +614,7 @@ public class AstarAgent extends Agent {
 
     @Override
     public Map<Integer, Action> middleStep(State.StateView newstate, History.HistoryView statehistory) {
+    	
         long startTime = System.nanoTime();
         long planTime = 0;
 
@@ -630,7 +631,7 @@ public class AstarAgent extends Agent {
 
         int footmanX = footmanUnit.getXPosition();
         int footmanY = footmanUnit.getYPosition();
-
+                
         if(!path.empty() && (nextLoc == null || (footmanX == nextLoc.x && footmanY == nextLoc.y))) {
 
             // stat moving to the next step in the path
@@ -820,9 +821,12 @@ public class AstarAgent extends Agent {
         agentMap = new AgentMap(xExtent, yExtent, start, goal, resourceLocations);
         agentMap.setEnemyLocation(enemyFootmanLoc);
 
+        openLocations.add(start);
         while (!openLocations.isEmpty()) {
             MapLocation cheapestLocation = openLocations.poll();
+            System.out.println("Cheapest location is " +cheapestLocation.getCoordinateString());
             if (cheapestLocation.equals(goal)) {
+            	System.out.println("Found the goal state at " +cheapestLocation.getCoordinateString());
                 return AstarPath(cheapestLocation);
             }
 
