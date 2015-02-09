@@ -158,13 +158,17 @@ public class AstarAgent extends Agent {
          */
         public Set<MapLocation> getReachableNeighbors(MapLocation enemyLocation, Set<MapLocation> resourceLocations, AgentMap map) {
 
+        	if (enemyLocation == null)
+        		System.out.println("enemyLoc is null");
+        	if (resourceLocations == null)
+        		System.out.println("resourceLoc is null");
             Set<MapLocation> locations = getNeighbors(map);
             Iterator<MapLocation> locationItr = locations.iterator();
             MapLocation curr = null;
             // Remove any neighbors not reachable from this location.
             while (locationItr.hasNext()) {
                 curr = locationItr.next();
-                if (resourceLocations.contains(curr) || enemyLocation.equals(curr)) {
+                if (resourceLocations.contains(curr) || (enemyLocation == null || enemyLocation.equals(curr))) {
                     locationItr.remove();
                 }
             }
