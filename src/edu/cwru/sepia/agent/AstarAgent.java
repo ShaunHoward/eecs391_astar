@@ -459,10 +459,10 @@ public class AstarAgent extends Agent {
          */
         @Override
         public int hashCode() {
-            int result = (cost != +0.0f ? Float.floatToIntBits(cost) : 0);
-            result = 31 * result + x;
+           // int result = (cost != +0.0f ? Float.floatToIntBits(cost) : 0);
+            int result = x;
             result = 31 * result + y;
-            return result;
+            return 53 * result;
         }
 
     }
@@ -653,6 +653,7 @@ public class AstarAgent extends Agent {
         	System.out.println("Path is null");
         if (nextLoc == null)
         	System.out.println("nextLoc is null");
+
         if(!path.empty() && (nextLoc == null || (footmanX == nextLoc.x && footmanY == nextLoc.y))) {
 
             // stat moving to the next step in the path
@@ -706,14 +707,10 @@ public class AstarAgent extends Agent {
     }
 
     @Override
-    public void savePlayerData(OutputStream os) {
-
-    }
+    public void savePlayerData(OutputStream os) {}
 
     @Override
-    public void loadPlayerData(InputStream is) {
-
-    }
+    public void loadPlayerData(InputStream is) {}
 
     /**
      * You will implement this method.
@@ -838,6 +835,7 @@ public class AstarAgent extends Agent {
      */
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
         System.out.println("AStarSearch Started");
+        boolean startLocation = true;
   
     	Set<MapLocation> expandedLocations = new HashSet<>();
         PriorityQueue<MapLocation> openLocations = new PriorityQueue<>();
@@ -858,15 +856,20 @@ public class AstarAgent extends Agent {
 
             System.out.println("Printing neighbors that are options for a move");
             for (MapLocation location : possibleLocations) {
-                if (!expandedLocations.contains(location)) { //this may have to be amended
+                if (!expandedLocations.contains(location)) {//this may have to be amended
                     System.out.println("Possible move is " +location.getCoordinateString());
-                	location.setPrevious(cheapestLocation);
                     location.setDistanceFromBeginning(distanceBetweenLocations(start, location));
                     location.setHeuristic(distanceBetweenLocations(location, goal));
                     location.setCost(location.getDistanceFromBeginning() + location.getHeuristic());
+                    //Do not add starting location to path.
+                    if (!startLocation) {
+                        location.setPrevious(cheapestLocation);
+                    } else {
+                        startLocation = false;
+                    }
                     expandedLocations.add(cheapestLocation);
-                    if (!openLocations.contains(location));
-                    	openLocations.add(location);
+                   // if (!openLocations.contains(location));
+                    openLocations.add(location);
                 }
             }
             
@@ -899,9 +902,22 @@ public class AstarAgent extends Agent {
     //Chebyshev distance
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
-            return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
+           // return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
+            return manhattanDistance(beginning, end);
         }
         return 0;
+    }
+
+    private float manhattanDistance(MapLocation beginning, MapLocation end){
+        float xDiff = beginning.getX() - end.getX();
+        float yDiff = beginning.getY() - end.getY();
+        if (xDiff < 0){
+            xDiff = xDiff * -1;
+        }
+        if (yDiff < 0){
+            yDiff = yDiff * -1;
+        }
+        return xDiff + yDiff;
     }
 
     /**
@@ -917,7 +933,8 @@ public class AstarAgent extends Agent {
     	System.out.println("Printing AStarPath in reverse");
         Stack<MapLocation> astarPath = new Stack<>();
 
-        MapLocation curr = end;
+        //Do not add goal to path.
+        MapLocation curr = end.getPrevious();
 
         astarPath.push(curr);
 
