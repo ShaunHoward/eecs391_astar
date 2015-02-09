@@ -176,7 +176,7 @@ public class AstarAgent extends Agent {
                     locationItr.remove();
                 }
                 else
-                	System.out.println("Reachable neighbor found at " +curr.toString());
+                	System.out.println("Reachable neighbor found at " +curr.getCoordinateString());
             }
             
             System.out.println("# of reachable neighbors is " +locations.size());
@@ -429,6 +429,7 @@ public class AstarAgent extends Agent {
                     ) {
                 return true;
             }
+
             return false;
         }
 
@@ -846,7 +847,7 @@ public class AstarAgent extends Agent {
         openLocations.add(start);
         while (!openLocations.isEmpty()) {
             MapLocation cheapestLocation = openLocations.poll();
-            System.out.println("Cheapest location is " +cheapestLocation.getCoordinateString());
+            System.out.println("Current location is " +cheapestLocation.getCoordinateString());
             if (cheapestLocation.equals(goal)) {
             	System.out.println("AStarSearch Complete. Found the goal state at " +cheapestLocation.getCoordinateString());
                 return AstarPath(cheapestLocation);
@@ -855,16 +856,40 @@ public class AstarAgent extends Agent {
             //Need to properly implement getting neighbors with fast runtime
             Set<MapLocation> possibleLocations = cheapestLocation.getReachableNeighbors(enemyFootmanLoc, resourceLocations, agentMap);
 
+            System.out.println("Printing neighbors that are options for a move");
             for (MapLocation location : possibleLocations) {
                 if (!expandedLocations.contains(location)) { //this may have to be amended
-                    location.setPrevious(cheapestLocation);
+                    System.out.println("Possible move is " +location.getCoordinateString());
+                	location.setPrevious(cheapestLocation);
                     location.setDistanceFromBeginning(distanceBetweenLocations(start, location));
                     location.setHeuristic(distanceBetweenLocations(location, goal));
                     location.setCost(location.getDistanceFromBeginning() + location.getHeuristic());
                     expandedLocations.add(cheapestLocation);
-                    openLocations.add(location);
+                    if (!openLocations.contains(location));
+                    	openLocations.add(location);
                 }
             }
+            
+            System.out.println("Printing open list");
+            Iterator<MapLocation> openItr = openLocations.iterator();
+            MapLocation tempOpen = null;
+            while (openItr.hasNext())
+            {
+            	tempOpen = openItr.next();
+            	System.out.println(tempOpen.getCoordinateString());
+            }
+            System.out.println();
+            
+            System.out.println("Printing closed list");
+            Iterator<MapLocation> closedItr = expandedLocations.iterator();
+            MapLocation tempClosed = null;
+            while (closedItr.hasNext())
+            {
+            	tempClosed = closedItr.next();
+            	System.out.println(tempClosed.getCoordinateString());
+            }
+            System.out.println();
+            
         }
         System.out.println("AStarSearch completed, no path found");
         // return an empty path
@@ -889,7 +914,7 @@ public class AstarAgent extends Agent {
      * map (top of stack) to the end of the map (bottom of stack)
      */
     public static Stack<MapLocation> AstarPath(MapLocation end) {
-
+    	System.out.println("Printing AStarPath in reverse");
         Stack<MapLocation> astarPath = new Stack<>();
 
         MapLocation curr = end;
@@ -897,12 +922,13 @@ public class AstarAgent extends Agent {
         astarPath.push(curr);
 
         while (curr.getPrevious() != null) {
-
+        	System.out.println(curr.getCoordinateString());
             curr = curr.getPrevious();
 
             astarPath.push(curr);
         }
-
+        
+        System.out.println();
         return astarPath;
     }
 
