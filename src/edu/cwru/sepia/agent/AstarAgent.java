@@ -550,6 +550,9 @@ public class AstarAgent extends Agent {
     private long totalPlanTime = 0; // nsecs
     private long totalExecutionTime = 0; //nsecs
 
+    Unit.UnitView townhallUnit;
+    int townhallX, townhallY;
+    
     public AstarAgent(int playernum)
     {
         super(playernum);
@@ -612,6 +615,9 @@ public class AstarAgent extends Agent {
             if(unitType.equals("townhall"))
             {
                 townhallID = unitID;
+                townhallUnit = newstate.getUnit(townhallID);
+            	townhallX = townhallUnit.getXPosition();
+            	townhallY = townhallUnit.getYPosition();
             }
             else if(unitType.equals("footman"))
             {
@@ -643,20 +649,21 @@ public class AstarAgent extends Agent {
 
         Map<Integer, Action> actions = new HashMap<Integer, Action>();
 
-        if(shouldReplanPath(newstate, statehistory, path)) {
+        Unit.UnitView footmanUnit = newstate.getUnit(footmanID);
+        int footmanX = footmanUnit.getXPosition();
+    		System.out.println("Footman x = " +footmanX);
+    	int footmanY = footmanUnit.getYPosition();
+    		System.out.println("Footman y = " +footmanY);
+    		
+    	
+    	
+        if(!(Math.abs(footmanX -townhallX) <= 1 && Math.abs(footmanY - townhallY) <= 1) && shouldReplanPath(newstate, statehistory, path)) {
             long planStartTime = System.nanoTime();
             path = findPath(newstate);
             planTime = System.nanoTime() - planStartTime;
             totalPlanTime += planTime;
         }
 
-        Unit.UnitView footmanUnit = newstate.getUnit(footmanID);
-
-        int footmanX = footmanUnit.getXPosition();
-        	System.out.println("Footman x = " +footmanX);
-        int footmanY = footmanUnit.getYPosition();
-        	System.out.println("Footman y = " +footmanY);
-        
         if(path == null)
         	System.out.println("Path is null");
         if (nextLoc == null)
@@ -680,8 +687,9 @@ public class AstarAgent extends Agent {
 
             actions.put(footmanID, Action.createPrimitiveMove(footmanID, nextDirection));
         } else {
-            Unit.UnitView townhallUnit = newstate.getUnit(townhallID);
-
+        	//Moving htis outside of if-else so that the replan path if can use it
+            //Unit.UnitView townhallUnit = newstate.getUnit(townhallID);
+        	townhallUnit = newstate.getUnit(townhallID);
             // if townhall was destroyed on the last turn
             if(townhallUnit == null) {
                 terminalStep(newstate, statehistory);
