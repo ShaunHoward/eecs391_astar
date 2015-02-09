@@ -923,8 +923,8 @@ public class AstarAgent extends Agent {
     //Chebyshev distance or Manhattan
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
-           // return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
-            return manhattanDistance(beginning, end);
+            return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
+           // return manhattanDistance(beginning, end);
         }
         return 0;
     }
