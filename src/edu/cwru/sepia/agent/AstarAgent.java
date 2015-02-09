@@ -424,7 +424,9 @@ public class AstarAgent extends Agent {
         public boolean sameLocation(MapLocation location) {
             if (this.x == location.x
                     && this.y == location.y
-                    && this.getCost() == location.getCost()) {
+                    //Removing this for now since there is no difference in path costs currently
+                    //&& this.getCost() == location.getCost()
+                    ) {
                 return true;
             }
             return false;
@@ -859,7 +861,7 @@ public class AstarAgent extends Agent {
                     location.setDistanceFromBeginning(distanceBetweenLocations(start, location));
                     location.setHeuristic(distanceBetweenLocations(location, goal));
                     location.setCost(location.getDistanceFromBeginning() + location.getHeuristic());
-                    expandedLocations.add(location);
+                    expandedLocations.add(cheapestLocation);
                     openLocations.add(location);
                 }
             }
