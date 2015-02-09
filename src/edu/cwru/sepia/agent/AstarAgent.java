@@ -751,7 +751,13 @@ public class AstarAgent extends Agent {
     //May want to check if enemy is on path if that's how moves happen, i.e. enemy only moves once or something to block path
     private boolean enemyBlockingPath(MapLocation enemyLocation, Stack<MapLocation> currentPath){
         MapLocation nextLocation = currentPath.peek();
-        MapLocation subsequentLocation = currentPath.elementAt(currentPath.size() - 2);
+        MapLocation subsequentLocation = null;
+        
+        if (currentPath.size() > 2) 	
+        	subsequentLocation = currentPath.elementAt(currentPath.size() - 2);
+        else
+        	subsequentLocation = currentPath.elementAt(0);
+        
         float enemyToNextLocation = distanceBetweenLocations(nextLocation, enemyLocation);
         float enemyToSubsequentLocation = distanceBetweenLocations(subsequentLocation, enemyLocation);
 
