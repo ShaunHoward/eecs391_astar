@@ -157,7 +157,7 @@ public class AstarAgent extends Agent {
          * @return connected neighbors of this location
          */
         public Set<MapLocation> getReachableNeighbors(MapLocation enemyLocation, Set<MapLocation> resourceLocations, AgentMap map) {
-        	System.out.println("Getting reachable neighbors");
+        //	System.out.println("Getting reachable neighbors");
         	if (enemyLocation == null)
         		System.out.println("enemyLoc is null");
         	if (resourceLocations == null)
@@ -166,7 +166,7 @@ public class AstarAgent extends Agent {
         		System.out.println("map is null");
         	
             Set<MapLocation> locations = getNeighbors(map);
-            	System.out.println("# of neighbors found is " +locations.size());
+          //  	System.out.println("# of neighbors found is " +locations.size());
             Iterator<MapLocation> locationItr = locations.iterator();
             MapLocation curr = null;
             // Remove any neighbors not reachable from this location.
@@ -176,10 +176,10 @@ public class AstarAgent extends Agent {
                     locationItr.remove();
                 }
             //    else
-                	System.out.println("Reachable neighbor found at " +curr.getCoordinateString());
+           //     	System.out.println("Reachable neighbor found at " +curr.getCoordinateString());
             }
             
-            System.out.println("# of reachable neighbors is " +locations.size());
+          //  System.out.println("# of reachable neighbors is " +locations.size());
             return locations;
         }
 
@@ -871,6 +871,25 @@ public class AstarAgent extends Agent {
             System.out.println("Current location is " +cheapestLocation.getCoordinateString());
             if (cheapestLocation.equals(goal)) {
             	System.out.println("AStarSearch Complete. Found the goal state at " +cheapestLocation.getCoordinateString());
+                System.out.println("Printing open list");
+                Iterator<MapLocation> openItr = openLocations.iterator();
+                MapLocation tempOpen = null;
+                while (openItr.hasNext())
+                {
+                    tempOpen = openItr.next();
+                    System.out.println(tempOpen.getCoordinateString());
+                }
+                System.out.println();
+
+                System.out.println("Printing closed list");
+                Iterator<MapLocation> closedItr = expandedLocations.iterator();
+                MapLocation tempClosed = null;
+                while (closedItr.hasNext())
+                {
+                    tempClosed = closedItr.next();
+                    System.out.println(tempClosed.getCoordinateString());
+                }
+                System.out.println();
                 return AstarPath(cheapestLocation);
             }
             expandedLocations.add(cheapestLocation);
@@ -878,11 +897,11 @@ public class AstarAgent extends Agent {
             //Need to properly implement getting neighbors with fast runtime
             possibleLocations = cheapestLocation.getReachableNeighbors(enemyFootmanLoc, resourceLocations, agentMap);
 
-            System.out.println("Printing neighbors that are options for a move");
+          //  System.out.println("Printing neighbors that are options for a move");
             for (MapLocation location : possibleLocations) {
                 if (!expandedLocations.contains(location) &&
                         !openLocations.contains(location)) {
-                    System.out.println("Possible move is " +location.getCoordinateString());
+                //    System.out.println("Possible move is " +location.getCoordinateString());
                     location.setDistanceFromBeginning(cheapestLocation.getDistanceFromBeginning() + 1);
                     location.setHeuristic(distanceBetweenLocations(location, goal));
                     location.setCost(location.getDistanceFromBeginning() + location.getHeuristic());
@@ -890,25 +909,7 @@ public class AstarAgent extends Agent {
                 }
             }
             
-            System.out.println("Printing open list");
-            Iterator<MapLocation> openItr = openLocations.iterator();
-            MapLocation tempOpen = null;
-            while (openItr.hasNext())
-            {
-            	tempOpen = openItr.next();
-            	System.out.println(tempOpen.getCoordinateString());
-            }
-            System.out.println();
-            
-            System.out.println("Printing closed list");
-            Iterator<MapLocation> closedItr = expandedLocations.iterator();
-            MapLocation tempClosed = null;
-            while (closedItr.hasNext())
-            {
-            	tempClosed = closedItr.next();
-            	System.out.println(tempClosed.getCoordinateString());
-            }
-            System.out.println();
+
             
         }
         System.out.println("AStarSearch completed, no path found");
@@ -937,8 +938,8 @@ public class AstarAgent extends Agent {
     //Chebyshev distance or Manhattan
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
-            return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
-           // return manhattanDistance(beginning, end);
+           // return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
+            return manhattanDistance(beginning, end);
         }
         return 0;
     }
