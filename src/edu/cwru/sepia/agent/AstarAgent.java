@@ -664,8 +664,10 @@ public class AstarAgent extends Agent {
             totalPlanTime += planTime;
         }
 
-        if(path == null)
-        	System.out.println("Path is null");
+        //When no path is found, exit program.
+        if(path == null) {
+            System.exit(1);
+        }
         if (nextLoc == null)
         	System.out.println("nextLoc is null");
 
@@ -908,12 +910,8 @@ public class AstarAgent extends Agent {
                     openLocations.add(location);
                 }
             }
-            
-
-            
         }
-        System.out.println("AStarSearch completed, no path found");
-        // return an empty path
+        System.err.println("No available path.");
         return null;
     }
 
