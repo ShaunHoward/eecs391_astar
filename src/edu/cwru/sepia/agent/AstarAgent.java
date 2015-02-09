@@ -175,7 +175,7 @@ public class AstarAgent extends Agent {
                 if (resourceLocations.contains(curr) || (enemyLocation != null && enemyLocation.equals(curr))) {
                     locationItr.remove();
                 }
-                else
+            //    else
                 	System.out.println("Reachable neighbor found at " +curr.getCoordinateString());
             }
             
@@ -533,6 +533,14 @@ public class AstarAgent extends Agent {
         public MapLocation getEnemyLocation(){
             return this.enemyFootmanLoc;
         }
+
+        public void setEnd(MapLocation end){
+            this.end = end;
+        }
+
+        public MapLocation getEnd(){
+            return this.end;
+        }
     }
 
     Stack<MapLocation> path;
@@ -739,7 +747,8 @@ public class AstarAgent extends Agent {
         return false;
     }
 
-    //Wish there was a way to check if enemy was on path
+    //Currently checking if enemy is close to next locations (if a real dynamic environment)
+    //May want to check if enemy is on path if that's how moves happen, i.e. enemy only moves once or something to block path
     private boolean enemyBlockingPath(MapLocation enemyLocation, Stack<MapLocation> currentPath){
         MapLocation nextLocation = currentPath.peek();
         MapLocation subsequentLocation = currentPath.elementAt(currentPath.size() - 2);
@@ -835,40 +844,34 @@ public class AstarAgent extends Agent {
      */
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
         System.out.println("AStarSearch Started");
-        boolean startLocation = true;
-  
+        MapLocation cheapestLocation;
+        Set<MapLocation> possibleLocations;
     	Set<MapLocation> expandedLocations = new HashSet<>();
         PriorityQueue<MapLocation> openLocations = new PriorityQueue<>();
         agentMap = new AgentMap(xExtent, yExtent, start, goal, resourceLocations);
         agentMap.setEnemyLocation(enemyFootmanLoc);
-
-        openLocations.add(start);
+        agentMap.setEnd(goal);
+        initializeSearch(agentMap, expandedLocations, openLocations);
         while (!openLocations.isEmpty()) {
-            MapLocation cheapestLocation = openLocations.poll();
+            cheapestLocation = openLocations.poll();
             System.out.println("Current location is " +cheapestLocation.getCoordinateString());
             if (cheapestLocation.equals(goal)) {
             	System.out.println("AStarSearch Complete. Found the goal state at " +cheapestLocation.getCoordinateString());
                 return AstarPath(cheapestLocation);
             }
+            expandedLocations.add(cheapestLocation);
 
             //Need to properly implement getting neighbors with fast runtime
-            Set<MapLocation> possibleLocations = cheapestLocation.getReachableNeighbors(enemyFootmanLoc, resourceLocations, agentMap);
+            possibleLocations = cheapestLocation.getReachableNeighbors(enemyFootmanLoc, resourceLocations, agentMap);
 
             System.out.println("Printing neighbors that are options for a move");
             for (MapLocation location : possibleLocations) {
-                if (!expandedLocations.contains(location)) {//this may have to be amended
+                if (!expandedLocations.contains(location) &&
+                        !openLocations.contains(location)) {
                     System.out.println("Possible move is " +location.getCoordinateString());
-                    location.setDistanceFromBeginning(distanceBetweenLocations(start, location));
+                    location.setDistanceFromBeginning(cheapestLocation.getDistanceFromBeginning() + 1);
                     location.setHeuristic(distanceBetweenLocations(location, goal));
                     location.setCost(location.getDistanceFromBeginning() + location.getHeuristic());
-                    //Do not add starting location to path.
-                    if (!startLocation) {
-                        location.setPrevious(cheapestLocation);
-                    } else {
-                        startLocation = false;
-                    }
-                    expandedLocations.add(cheapestLocation);
-                   // if (!openLocations.contains(location));
                     openLocations.add(location);
                 }
             }
@@ -899,7 +902,25 @@ public class AstarAgent extends Agent {
         return null;
     }
 
-    //Chebyshev distance
+    /**
+     * Initializes the A* search algorithm by getting the beginning location of the map
+     * and initializing its values. Since it will not be expanded, it is added to the
+     * set of expanded locations as well as the open queue so it can still be followed along.
+     *
+     * @param map - the map to begin the search on
+     * @param expandedLocations - the set of expanded locations
+     * @param openLocations - the priority queue of new locations
+     */
+    public void initializeSearch(AgentMap map, Set<MapLocation> expandedLocations, PriorityQueue<MapLocation> openLocations) {
+        if (map.getBegin() != null){
+            map.getBegin().setDistanceFromBeginning(0);
+            map.getBegin().setHeuristic(distanceBetweenLocations(map.getBegin(), map.getEnd()));
+            map.getBegin().setCost(map.getBegin().getDistanceFromBeginning() + map.getBegin().getHeuristic());
+            openLocations.add(map.getBegin());
+        }
+    }
+
+    //Chebyshev distance or Manhattan
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
            // return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
