@@ -157,21 +157,29 @@ public class AstarAgent extends Agent {
          * @return connected neighbors of this location
          */
         public Set<MapLocation> getReachableNeighbors(MapLocation enemyLocation, Set<MapLocation> resourceLocations, AgentMap map) {
-
+        	System.out.println("Getting reachable neighbors");
         	if (enemyLocation == null)
         		System.out.println("enemyLoc is null");
         	if (resourceLocations == null)
         		System.out.println("resourceLoc is null");
+        	if (map == null)
+        		System.out.println("map is null");
+        	
             Set<MapLocation> locations = getNeighbors(map);
+            	System.out.println("# of neighbors found is " +locations.size());
             Iterator<MapLocation> locationItr = locations.iterator();
             MapLocation curr = null;
             // Remove any neighbors not reachable from this location.
             while (locationItr.hasNext()) {
                 curr = locationItr.next();
-                if (resourceLocations.contains(curr) || (enemyLocation == null || enemyLocation.equals(curr))) {
+                if (resourceLocations.contains(curr) || (enemyLocation != null && enemyLocation.equals(curr))) {
                     locationItr.remove();
                 }
+                else
+                	System.out.println("Reachable neighbor found at " +curr.toString());
             }
+            
+            System.out.println("# of reachable neighbors is " +locations.size());
             return locations;
         }
 
@@ -634,8 +642,14 @@ public class AstarAgent extends Agent {
         Unit.UnitView footmanUnit = newstate.getUnit(footmanID);
 
         int footmanX = footmanUnit.getXPosition();
+        	System.out.println("Footman x = " +footmanX);
         int footmanY = footmanUnit.getYPosition();
-                
+        	System.out.println("Footman y = " +footmanY);
+        
+        if(path == null)
+        	System.out.println("Path is null");
+        if (nextLoc == null)
+        	System.out.println("nextLoc is null");
         if(!path.empty() && (nextLoc == null || (footmanX == nextLoc.x && footmanY == nextLoc.y))) {
 
             // stat moving to the next step in the path
@@ -820,7 +834,9 @@ public class AstarAgent extends Agent {
      * @return Stack of positions with top of stack being first move in plan
      */
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
-        Set<MapLocation> expandedLocations = new HashSet<>();
+        System.out.println("AStarSearch Started");
+  
+    	Set<MapLocation> expandedLocations = new HashSet<>();
         PriorityQueue<MapLocation> openLocations = new PriorityQueue<>();
         agentMap = new AgentMap(xExtent, yExtent, start, goal, resourceLocations);
         agentMap.setEnemyLocation(enemyFootmanLoc);
@@ -830,7 +846,7 @@ public class AstarAgent extends Agent {
             MapLocation cheapestLocation = openLocations.poll();
             System.out.println("Cheapest location is " +cheapestLocation.getCoordinateString());
             if (cheapestLocation.equals(goal)) {
-            	System.out.println("Found the goal state at " +cheapestLocation.getCoordinateString());
+            	System.out.println("AStarSearch Complete. Found the goal state at " +cheapestLocation.getCoordinateString());
                 return AstarPath(cheapestLocation);
             }
 
@@ -848,7 +864,7 @@ public class AstarAgent extends Agent {
                 }
             }
         }
-
+        System.out.println("AStarSearch completed, no path found");
         // return an empty path
         return null;
     }
