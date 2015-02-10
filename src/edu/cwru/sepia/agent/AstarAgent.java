@@ -157,13 +157,6 @@ public class AstarAgent extends Agent {
          * @return connected neighbors of this location
          */
         public Set<MapLocation> getReachableNeighbors(MapLocation enemyLocation, Set<MapLocation> resourceLocations, AgentMap map) {
-        	System.out.println("Getting reachable neighbors");
-        	if (enemyLocation == null)
-        		System.out.println("enemyLoc is null");
-        	if (resourceLocations == null)
-        		System.out.println("resourceLoc is null");
-        	if (map == null)
-        		System.out.println("map is null");
         	
             Set<MapLocation> locations = getNeighbors(map);
             	System.out.println("# of neighbors found is " +locations.size());
@@ -175,11 +168,8 @@ public class AstarAgent extends Agent {
                 if (resourceLocations.contains(curr) || (enemyLocation != null && enemyLocation.equals(curr))) {
                     locationItr.remove();
                 }
-            //    else
-                	System.out.println("Reachable neighbor found at " +curr.getCoordinateString());
             }
             
-            System.out.println("# of reachable neighbors is " +locations.size());
             return locations;
         }
 
@@ -422,11 +412,7 @@ public class AstarAgent extends Agent {
          * @return whether the the locations are the same
          */
         public boolean sameLocation(MapLocation location) {
-            if (this.x == location.x
-                    && this.y == location.y
-                    //Removing this for now since there is no difference in path costs currently
-                    //&& this.getCost() == location.getCost()
-                    ) {
+            if (this.x == location.x && this.y == location.y) {
                 return true;
             }
 
@@ -459,7 +445,6 @@ public class AstarAgent extends Agent {
          */
         @Override
         public int hashCode() {
-           // int result = (cost != +0.0f ? Float.floatToIntBits(cost) : 0);
             int result = x;
             result = 31 * result + y;
             return 53 * result;
@@ -509,6 +494,7 @@ public class AstarAgent extends Agent {
         public int size() {
             return this.size;
         }
+        
         /**
          * Gets the x extent of the maze.
          *
@@ -517,6 +503,7 @@ public class AstarAgent extends Agent {
         public int getXExtent() {
             return this.xExtent;
         }
+        
         /**
          * Gets the y extent of the maze.
          *
@@ -556,8 +543,6 @@ public class AstarAgent extends Agent {
     public AstarAgent(int playernum)
     {
         super(playernum);
-
-        System.out.println("Constructed AstarAgent");
     }
 
     @Override
@@ -651,11 +636,7 @@ public class AstarAgent extends Agent {
 
         Unit.UnitView footmanUnit = newstate.getUnit(footmanID);
         int footmanX = footmanUnit.getXPosition();
-    		System.out.println("Footman x = " +footmanX);
     	int footmanY = footmanUnit.getYPosition();
-    		System.out.println("Footman y = " +footmanY);
-    		
-    	
     	
         if(!(Math.abs(footmanX -townhallX) <= 1 && Math.abs(footmanY - townhallY) <= 1) && shouldReplanPath(newstate, statehistory, path)) {
             long planStartTime = System.nanoTime();
@@ -664,17 +645,10 @@ public class AstarAgent extends Agent {
             totalPlanTime += planTime;
         }
 
-        if(path == null)
-        	System.out.println("Path is null");
-        if (nextLoc == null)
-        	System.out.println("nextLoc is null");
-
         if(!path.empty() && (nextLoc == null || (footmanX == nextLoc.x && footmanY == nextLoc.y))) {
 
             // stat moving to the next step in the path
             nextLoc = path.pop();
-
-            System.out.println("Moving to (" + nextLoc.x + ", " + nextLoc.y + ")");
         }
 
         if(nextLoc != null && (footmanX != nextLoc.x || footmanY != nextLoc.y))
@@ -857,7 +831,7 @@ public class AstarAgent extends Agent {
      * @return Stack of positions with top of stack being first move in plan
      */
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
-        System.out.println("AStarSearch Started");
+
         MapLocation cheapestLocation;
         Set<MapLocation> possibleLocations;
     	Set<MapLocation> expandedLocations = new HashSet<>();
@@ -868,9 +842,7 @@ public class AstarAgent extends Agent {
         initializeSearch(agentMap, expandedLocations, openLocations);
         while (!openLocations.isEmpty()) {
             cheapestLocation = openLocations.poll();
-            System.out.println("Current location is " +cheapestLocation.getCoordinateString());
             if (cheapestLocation.equals(goal)) {
-            	System.out.println("AStarSearch Complete. Found the goal state at " +cheapestLocation.getCoordinateString());
                 return AstarPath(cheapestLocation);
             }
             expandedLocations.add(cheapestLocation);
@@ -878,11 +850,9 @@ public class AstarAgent extends Agent {
             //Need to properly implement getting neighbors with fast runtime
             possibleLocations = cheapestLocation.getReachableNeighbors(enemyFootmanLoc, resourceLocations, agentMap);
 
-            System.out.println("Printing neighbors that are options for a move");
             for (MapLocation location : possibleLocations) {
                 if (!expandedLocations.contains(location) &&
                         !openLocations.contains(location)) {
-                    System.out.println("Possible move is " +location.getCoordinateString());
                     location.setDistanceFromBeginning(cheapestLocation.getDistanceFromBeginning() + 1);
                     location.setHeuristic(distanceBetweenLocations(location, goal));
                     location.setCost(location.getDistanceFromBeginning() + location.getHeuristic());
@@ -890,28 +860,20 @@ public class AstarAgent extends Agent {
                 }
             }
             
-            System.out.println("Printing open list");
             Iterator<MapLocation> openItr = openLocations.iterator();
             MapLocation tempOpen = null;
             while (openItr.hasNext())
             {
             	tempOpen = openItr.next();
-            	System.out.println(tempOpen.getCoordinateString());
             }
-            System.out.println();
             
-            System.out.println("Printing closed list");
             Iterator<MapLocation> closedItr = expandedLocations.iterator();
             MapLocation tempClosed = null;
             while (closedItr.hasNext())
             {
             	tempClosed = closedItr.next();
-            	System.out.println(tempClosed.getCoordinateString());
             }
-            System.out.println();
-            
         }
-        System.out.println("AStarSearch completed, no path found");
         // return an empty path
         return null;
     }
@@ -965,7 +927,6 @@ public class AstarAgent extends Agent {
      * map (top of stack) to the end of the map (bottom of stack)
      */
     public static Stack<MapLocation> AstarPath(MapLocation end) {
-    	System.out.println("Printing AStarPath in reverse");
         Stack<MapLocation> astarPath = new Stack<>();
 
         //Do not add goal to path.
@@ -974,13 +935,11 @@ public class AstarAgent extends Agent {
         astarPath.push(curr);
 
         while (curr.getPrevious() != null) {
-        	System.out.println(curr.getCoordinateString());
             curr = curr.getPrevious();
 
             astarPath.push(curr);
         }
         
-        System.out.println();
         return astarPath;
     }
 
