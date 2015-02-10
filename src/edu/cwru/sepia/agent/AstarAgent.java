@@ -159,7 +159,6 @@ public class AstarAgent extends Agent {
         public Set<MapLocation> getReachableNeighbors(MapLocation enemyLocation, Set<MapLocation> resourceLocations, AgentMap map) {
         	
             Set<MapLocation> locations = getNeighbors(map);
-            	System.out.println("# of neighbors found is " +locations.size());
             Iterator<MapLocation> locationItr = locations.iterator();
             MapLocation curr = null;
             // Remove any neighbors not reachable from this location.
@@ -169,7 +168,6 @@ public class AstarAgent extends Agent {
                     locationItr.remove();
                 }
             }
-            
             return locations;
         }
 
@@ -207,15 +205,7 @@ public class AstarAgent extends Agent {
             //x - 1 & y + 1
             int neighborX = this.x - 1;
             int neighborY = this.y + 1;
-
-            // Check if the neighbor is within the x extent of the map.
-            if (map.getXExtent() > neighborX && neighborX >= 0) {
-                // Check if the neighbor is within the y extent of the map.
-                if (map.getYExtent() > neighborY && neighborY >= 0){
-                    return new MapLocation(neighborX, neighborY, this, 0);
-                }
-            }
-            return null;
+            return neighborWithinBounds(map, neighborX, neighborY);
         }
 
         /**
@@ -229,16 +219,7 @@ public class AstarAgent extends Agent {
             //x + 1 & y + 1
             int neighborX = this.x + 1;
             int neighborY = this.y + 1;
-            
-            //Check if the neighbor is within the x extent of the map.
-            if (map.getXExtent() > neighborX && neighborX >= 0) {
-            	//Check if the neighbor is within the y extent of the map
-            	if (map.getYExtent() > neighborY && neighborY > 0) {
-            		return new MapLocation(neighborX, neighborY, this, 0);
-            	}
-            }
-            
-            return null;
+            return neighborWithinBounds(map, neighborX, neighborY);
         }
 
         /**
@@ -252,16 +233,7 @@ public class AstarAgent extends Agent {
             //x - 1 & y - 1
         	int neighborX = this.x - 1;
             int neighborY = this.y - 1;
-            
-            //Check if the neighbor is within the x extent of the map.
-            if (map.getXExtent() > neighborX && neighborX >= 0) {
-            	//Check if the neighbor is within the y extent of the map
-            	if (map.getYExtent() > neighborY && neighborY > 0) {
-            		return new MapLocation(neighborX, neighborY, this, 0);
-            	}
-            }
-            
-            return null;
+            return neighborWithinBounds(map, neighborX, neighborY);
         }
 
         /**
@@ -275,16 +247,7 @@ public class AstarAgent extends Agent {
             //x + 1 & y - 1
         	int neighborX = this.x + 1;
             int neighborY = this.y - 1;
-            
-            //Check if the neighbor is within the x extent of the map.
-            if (map.getXExtent() > neighborX && neighborX >= 0) {
-            	//Check if the neighbor is within the y extent of the map
-            	if (map.getYExtent() > neighborY && neighborY > 0) {
-            		return new MapLocation(neighborX, neighborY, this, 0);
-            	}
-            }
-            
-            return null;
+            return neighborWithinBounds(map, neighborX, neighborY);
         }
 
         /**
@@ -297,13 +260,7 @@ public class AstarAgent extends Agent {
         private MapLocation getWestNeighbor(AgentMap map) {
             //x - 1 & y
         	int neighborX = this.x - 1;
-            
-            //Check if the neighbor is within the x extent of the map.
-            if (map.getXExtent() > neighborX && neighborX >= 0) {
-            		return new MapLocation(neighborX, this.y, this, 0);
-            	}
-          
-            return null;
+            return neighborWithinBound(map, neighborX, this.y, true);
         }
 
         /**
@@ -316,13 +273,7 @@ public class AstarAgent extends Agent {
         private MapLocation getEastNeighbor(AgentMap map) {
             //x + 1 & y
         	int neighborX = this.x + 1;
-            
-            //Check if the neighbor is within the x extent of the map.
-            if (map.getXExtent() > neighborX && neighborX >= 0) {
-            		return new MapLocation(neighborX, this.y, this, 0);
-            	}
-          
-            return null;
+            return neighborWithinBound(map, neighborX, this.y, true);
         }
 
         /**
@@ -335,13 +286,7 @@ public class AstarAgent extends Agent {
         private MapLocation getSouthNeighbor(AgentMap map) {
             //x & y + 1
         	int neighborY = this.y + 1;
-            
-            //Check if the neighbor is within the y extent of the map.
-            if (map.getYExtent() > neighborY && neighborY >= 0) {
-            		return new MapLocation(this.x, neighborY, this, 0);
-            	}
-          
-            return null;
+            return neighborWithinBound(map, this.x, neighborY, false);
         }
 
         /**
@@ -354,13 +299,56 @@ public class AstarAgent extends Agent {
         private MapLocation getNorthNeighbor(AgentMap map) {
             //x & y - 1
         	int neighborY = this.y - 1;
-            
-            //Check if the neighbor is within the y extent of the map.
-            if (map.getYExtent() > neighborY && neighborY >= 0) {
-            		return new MapLocation(this.x, neighborY, this, 0);
-            	}
-          
+            return neighborWithinBound(map, this.x, neighborY, false);
+        }
+
+        /**
+         * Determines if the provided coordinates are within the x and y bounds of the map.
+         * When the given coordinates are within the agent map, a new neighbor map location
+         * will be generated from the provided coordinates. Otherwise, null is returned because
+         * the neighbor is not within the bounds of the map.
+         *
+         * @param map - the map to check the bounds of
+         * @param neighborX - the x coordinate of the new neighbor
+         * @param neighborY - the y coordinate of the new neighbor
+         * @return a new neighbor within the bounds of the map or null if the coordinates are out
+         * of the map bounds
+         */
+        private MapLocation neighborWithinBounds(AgentMap map, int neighborX, int neighborY){
+            //Check if the neighbor is within the x extent of the map.
+            if (map.getXExtent() > neighborX && neighborX >= 0) {
+                //Check if the neighbor is within the y extent of the map
+                if (map.getYExtent() > neighborY && neighborY >= 0) {
+                    return new MapLocation(neighborX, neighborY, this, 0);
+                }
+            }
             return null;
+        }
+
+        /**
+         * Determines if the provided coordinates are within either the x or y bounds of the map
+         * depending on the boolean provided for checking x extent.
+         * When the designated coordinate is within the agent map, a new neighbor map location
+         * will be generated from the given coordinates. Otherwise, null is returned because the neighbor is not within
+         * the bounds of the map.
+         *
+         * @param map - the map to check the bounds of
+         * @param neighborX - the x coordinate of the new neighbor
+         * @param neighborY - the y coordinate of the new neighbor
+         * @return a new neighbor within the bounds of the map or null if the coordinates are out
+         * of the map bounds
+         */
+        private MapLocation neighborWithinBound(AgentMap map, int neighborX, int neighborY, boolean checkX){
+
+            MapLocation neighbor = null;
+            //Check if the neighbor is within the x extent of the map.
+            if (checkX && map.getXExtent() > neighborX && neighborX >= 0) {
+                neighbor = new MapLocation(neighborX, this.y, this, 0);
+            } else if (map.getYExtent() > neighborY && neighborY >= 0) {
+                //Check if the neighbor is within the y extent of the map.
+                neighbor = new MapLocation(this.x, neighborY, this, 0);
+            }
+            return neighbor;
         }
 
         /**
@@ -645,6 +633,11 @@ public class AstarAgent extends Agent {
             totalPlanTime += planTime;
         }
 
+        //Cannot operate further, must exit program.
+        if (path == null){
+            System.exit(1);
+        }
+
         if(!path.empty() && (nextLoc == null || (footmanX == nextLoc.x && footmanY == nextLoc.y))) {
 
             // stat moving to the next step in the path
@@ -744,10 +737,7 @@ public class AstarAgent extends Agent {
         float enemyToSubsequentLocation = distanceBetweenLocations(subsequentLocation, enemyLocation);
 
         //check if enemy is near the next location or subsequent location of footman along path
-        if (enemyToNextLocation <= 1 || enemyToSubsequentLocation <= 1){
-            return true;
-        }
-        return false;
+        return (enemyToNextLocation <= 1 || enemyToSubsequentLocation <= 1);
     }
 
     /**
@@ -846,8 +836,6 @@ public class AstarAgent extends Agent {
                 return AstarPath(cheapestLocation);
             }
             expandedLocations.add(cheapestLocation);
-
-            //Need to properly implement getting neighbors with fast runtime
             possibleLocations = cheapestLocation.getReachableNeighbors(enemyFootmanLoc, resourceLocations, agentMap);
 
             for (MapLocation location : possibleLocations) {
@@ -859,22 +847,9 @@ public class AstarAgent extends Agent {
                     openLocations.add(location);
                 }
             }
-            
-            Iterator<MapLocation> openItr = openLocations.iterator();
-            MapLocation tempOpen = null;
-            while (openItr.hasNext())
-            {
-            	tempOpen = openItr.next();
-            }
-            
-            Iterator<MapLocation> closedItr = expandedLocations.iterator();
-            MapLocation tempClosed = null;
-            while (closedItr.hasNext())
-            {
-            	tempClosed = closedItr.next();
-            }
         }
-        // return an empty path
+
+        System.err.println("No available path.");
         return null;
     }
 
@@ -934,6 +909,7 @@ public class AstarAgent extends Agent {
 
         astarPath.push(curr);
 
+        //Will not add starting location to path.
         while (curr.getPrevious() != null) {
             curr = curr.getPrevious();
 
