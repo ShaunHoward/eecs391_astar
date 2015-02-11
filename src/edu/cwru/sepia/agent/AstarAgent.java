@@ -625,7 +625,7 @@ public class AstarAgent extends Agent {
         Unit.UnitView footmanUnit = newstate.getUnit(footmanID);
         int footmanX = footmanUnit.getXPosition();
     	int footmanY = footmanUnit.getYPosition();
-    	
+
         if(!(Math.abs(footmanX -townhallX) <= 1 && Math.abs(footmanY - townhallY) <= 1) && shouldReplanPath(newstate, statehistory, path)) {
             long planStartTime = System.nanoTime();
             path = findPath(newstate);
@@ -725,19 +725,21 @@ public class AstarAgent extends Agent {
     //Currently checking if enemy is close to next locations (if a real dynamic environment)
     //May want to check if enemy is on path if that's how moves happen, i.e. enemy only moves once or something to block path
     private boolean enemyBlockingPath(MapLocation enemyLocation, Stack<MapLocation> currentPath){
-        MapLocation nextLocation = currentPath.peek();
-        MapLocation subsequentLocation = null;
-        
-        if (currentPath.size() > 2) 	
-        	subsequentLocation = currentPath.elementAt(currentPath.size() - 2);
-        else
-        	subsequentLocation = currentPath.elementAt(0);
-        
-        float enemyToNextLocation = distanceBetweenLocations(nextLocation, enemyLocation);
-        float enemyToSubsequentLocation = distanceBetweenLocations(subsequentLocation, enemyLocation);
+        if (!currentPath.isEmpty()) {
+            MapLocation nextLocation = currentPath.peek();
+            float enemyToNextLocation = distanceBetweenLocations(nextLocation, enemyLocation);
+            if (currentPath.size() > 2){
+                MapLocation subsequentLocation = currentPath.get(currentPath.size() - 2);
+                float enemyToSubsequentLocation = distanceBetweenLocations(subsequentLocation, enemyLocation);
+                //check if enemy is near the next location or subsequent location of footman along path
+                return (enemyToNextLocation <= 1 || enemyToSubsequentLocation <= 1);
+            }
+            //just check if enemy is near the next location
+            return enemyToNextLocation <= 1;
+        }
 
-        //check if enemy is near the next location or subsequent location of footman along path
-        return (enemyToNextLocation <= 1 || enemyToSubsequentLocation <= 1);
+        //already at goal
+        return false;
     }
 
     /**
@@ -907,13 +909,10 @@ public class AstarAgent extends Agent {
         //Do not add goal to path.
         MapLocation curr = end.getPrevious();
 
-        astarPath.push(curr);
-
         //Will not add starting location to path.
-        while (curr.getPrevious() != null) {
-            curr = curr.getPrevious();
-
+        while (curr != null && curr.getPrevious() != null) {
             astarPath.push(curr);
+            curr = curr.getPrevious();
         }
         
         return astarPath;
