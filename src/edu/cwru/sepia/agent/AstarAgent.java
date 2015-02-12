@@ -159,6 +159,7 @@ public class AstarAgent extends Agent {
         public Set<MapLocation> getReachableNeighbors(MapLocation enemyLocation, Set<MapLocation> resourceLocations, AgentMap map) {
         	
             Set<MapLocation> locations = getNeighbors(map);
+
             Iterator<MapLocation> locationItr = locations.iterator();
             MapLocation curr = null;
             // Remove any neighbors not reachable from this location.
@@ -654,10 +655,13 @@ public class AstarAgent extends Agent {
             totalPlanTime += planTime;
         }
 
-        //Cannot operate further, must exit program.
-        if (path == null){
+        //When no path is found, exit program.
+        if(path == null) {
             System.exit(1);
         }
+        if (nextLoc == null)
+        	System.out.println("nextLoc is null");
+
 
         if(!path.empty() && (nextLoc == null || (footmanX == nextLoc.x && footmanY == nextLoc.y))) {
 
@@ -895,8 +899,8 @@ public class AstarAgent extends Agent {
     //Chebyshev distance or Manhattan
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
-            return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
-           // return manhattanDistance(beginning, end);
+           // return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
+            return manhattanDistance(beginning, end);
         }
         return 0;
     }
