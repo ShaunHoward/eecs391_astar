@@ -149,14 +149,12 @@ public class AstarAgent extends Agent {
         }
 
         /**
-         * Gets a set of neighbors that are currently reachable from this
-         * current location.
+         * Gets a set of neighbor locations that are currently reachable from this
+         * current location, i.e. they cannot be enemy or resource locations.
          *
-         * @param enemyLocation - the location of the enemy footman who blocks the path
-         * @param resourceLocations - the set of resource locations which are blocking the path
-         * @return connected neighbors of this location
+         * @return reachable neighbor locations of this location
          */
-        public Set<MapLocation> getReachableNeighbors(MapLocation enemyLocation, Set<MapLocation> resourceLocations, AgentMap map) {
+        public Set<MapLocation> getReachableNeighbors(AgentMap map) {
         	
             Set<MapLocation> locations = getNeighbors(map);
             Iterator<MapLocation> locationItr = locations.iterator();
@@ -164,7 +162,8 @@ public class AstarAgent extends Agent {
             // Remove any neighbors not reachable from this location.
             while (locationItr.hasNext()) {
                 curr = locationItr.next();
-                if (resourceLocations.contains(curr) || (enemyLocation != null && enemyLocation.equals(curr))) {
+                if (map.getResourceLocations().contains(curr) || (map.getEnemyLocation() != null &&
+                        map.getEnemyLocation().equals(curr))) {
                     locationItr.remove();
                 }
             }
@@ -440,21 +439,25 @@ public class AstarAgent extends Agent {
 
     }
 
+    /**
+     * A map for the current AstarAgent. This helps describe the environment of the current
+     * map to the agent for search. This class holds the start and goal locations desired for
+     * the agent as well as the enemy location(s) and the resource locations so the
+     * agent can navigate around them during search. Any properties of the map necessary
+     * to navigate are stored in the AgentMap, i.e. x and y extents.
+     */
     public class AgentMap {
-        /* the length of the maze by rows. */
+        /* the length of the map by rows. */
         int xExtent = 0;
-        /* the width of the maze by columns. */
+        /* the width of the map by columns. */
         int yExtent = 0;
-        /* the size of the maze by length times width. */
-        int size = 0;
-        /* the beginning location of the maze. */
+        /* the beginning location of the map. */
         MapLocation begin = null;
-        /* the ending location of the maze. */
+        /* the ending location of the map. */
         MapLocation end = null;
-
-        /* The location of the enemy footman on this map. */
+        /* the location of the enemy footman on this map. */
         MapLocation enemyFootmanLoc;
-
+        /* the locations of resources on this map. */
         Set<MapLocation> resourceLocations = new HashSet<>();
 
         public AgentMap(int xExtent, int yExtent, MapLocation agentStart, MapLocation agentStop, Set<MapLocation> resourceLocations){
@@ -466,58 +469,74 @@ public class AstarAgent extends Agent {
         }
 
         /**
-         * Gets the beginning location of this maze.
+         * Gets the beginning location of this map.
          *
-         * @return the beginning location of this maze
+         * @return the beginning location of this map
          */
         public MapLocation getBegin() {
             return begin;
         }
 
         /**
-         * Gets the size of this maze.
+         * Gets the x extent of the map.
          *
-         * @return the size of this maze
-         */
-        public int size() {
-            return this.size;
-        }
-        
-        /**
-         * Gets the x extent of the maze.
-         *
-         * @return the x extent of the maze
+         * @return the x extent of the map
          */
         public int getXExtent() {
             return this.xExtent;
         }
         
         /**
-         * Gets the y extent of the maze.
+         * Gets the y extent of the map.
          *
-         * @return the y extent of the maze
+         * @return the y extent of the map
          */
         public int getYExtent() {
             return this.yExtent;
         }
 
+        /**
+         * Sets the enemy footman location on the map.
+         * @param enemyFootmanLoc - the enemy footman location on the map
+         */
         public void setEnemyLocation(MapLocation enemyFootmanLoc) {
             this.enemyFootmanLoc = enemyFootmanLoc;
         }
 
+        /**
+         * Sets the enemy footman location on the map.
+         * @return the enemy footman location on the map
+         */
         public MapLocation getEnemyLocation(){
             return this.enemyFootmanLoc;
         }
 
+        /**
+         * Sets the end location of the current map.
+         * @param end - the end of the current map for the current agent
+         */
         public void setEnd(MapLocation end){
             this.end = end;
         }
 
+        /**
+         * Sets the end location of the current map.
+         * @return the end of the current map for the current agent
+         */
         public MapLocation getEnd(){
             return this.end;
         }
+
+        /**
+         * Gets the resource locations of the current map.
+         * @return the resource locations of the current map for the current agent
+         */
+        public Set<MapLocation> getResourceLocations() {
+            return resourceLocations;
+        }
     }
 
+    //The current A* path through the map/maze.
     Stack<MapLocation> path;
     int footmanID, townhallID, enemyFootmanID;
     MapLocation nextLoc;
@@ -696,21 +715,16 @@ public class AstarAgent extends Agent {
     public void loadPlayerData(InputStream is) {}
 
     /**
-     * You will implement this method.
+     * Determines whether to replan the A* path of the current agent based on the current location of the enemy footman on the map.
      *
-     * This method should return true when the path needs to be replanned
-     * and false otherwise. This will be necessary on the dynamic map where the
-     * footman will move to block your unit.
-     *
-     * @param state
-     * @param history
-     * @param currentPath
-     * @return
+     * @param state - the current state of map
+     * @param history - the history of the map and search
+     * @param currentPath - the current A* path that the agent is following.
+     * @return whether the agent should replan its path based on the current map state.
      */
     private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath)
     {
-       // Unit.UnitView footmanUnit = state.getUnit(footmanID);
-       // MapLocation footmanLocation = new MapLocation(footmanUnit.getXPosition(), footmanUnit.getYPosition(), null, 0);
+        //The current location of the enemy footman.
         MapLocation enemyLocation;
 
         if(enemyFootmanID != -1) {
@@ -722,8 +736,14 @@ public class AstarAgent extends Agent {
         return false;
     }
 
-    //Currently checking if enemy is close to next locations (if a real dynamic environment)
-    //May want to check if enemy is on path if that's how moves happen, i.e. enemy only moves once or something to block path
+    /**
+     * Determines if the enemy is blocking the path based on its distance from the next and subsequent locations of the
+     * agent in the A* path.
+     *
+     * @param enemyLocation - the location of the enemy on the map currently
+     * @param currentPath - the current A* path that the agent is following
+     * @return whether the enemy is close to the next or subsequent locations of the agent on its path
+     */
     private boolean enemyBlockingPath(MapLocation enemyLocation, Stack<MapLocation> currentPath){
         if (!currentPath.isEmpty()) {
             MapLocation nextLocation = currentPath.peek();
@@ -738,16 +758,17 @@ public class AstarAgent extends Agent {
             return enemyToNextLocation <= 1;
         }
 
-        //already at goal
+        //agent is already at goal
         return false;
     }
 
     /**
-     * This method is implemented for you. You should look at it to see examples of
-     * how to find units and resources in Sepia.
+     * Finds an A* path from the footman start position to the town hall position if one exists.
+     * If a path does not exist, null will be returned. The enemy footman location and resource locations
+     * are noted to make sure the agent navigates around them since they are considered unreachable locations.
      *
-     * @param state
-     * @return
+     * @param state - the state of the map
+     * @return the maplocations of an A* path to navigate the agent to the town hall around all resources and enemy
      */
     private Stack<MapLocation> findPath(State.StateView state)
     {
@@ -778,16 +799,15 @@ public class AstarAgent extends Agent {
     }
 
     /**
-     * This is the method you will implement for the assignment. Your implementation
-     * will use the A* algorithm to compute the optimum path from the start position to
-     * a position adjacent to the goal position.
+     * Finds the A* path through a map via the given map locations. The algorithm will avoid designing a path through
+     * the enemy and resource locations but will find an optimal path to a location adjacent to the townhall location (goal)
+     * from the footman starting location.
      * <p/>
-     * You will return a Stack of positions with the top of the stack being the first space to move to
+     * It returns a Stack of locations with the top of the stack being the first space to move to
      * and the bottom of the stack being the last space to move to. If there is no path to the townhall
-     * then return null from the method and the agent will print a message and do nothing.
-     * The code to execute the plan is provided for you in the middleStep method.
+     * then null is returned from the method and the agent will print a message via middlestep() and exit with exit code 0.
      * <p/>
-     * As an example consider the following simple map
+     * An example map is the following:
      * <p/>
      * F - - - -
      * x x x - x
@@ -815,11 +835,11 @@ public class AstarAgent extends Agent {
      * <p/>
      * Notice how the initial footman position and the townhall position are not included in the path stack
      *
-     * @param start             Starting position of the footman
-     * @param goal              MapLocation of the townhall
-     * @param xExtent           Width of the map
-     * @param yExtent           Length of the map
-     * @param resourceLocations Set of positions occupied by resources
+     * @param start - Starting position of the footman
+     * @param goal - MapLocation of the townhall
+     * @param xExtent - Width of the map
+     * @param yExtent - Length of the map
+     * @param resourceLocations - Set of positions occupied by resources
      * @return Stack of positions with top of stack being first move in plan
      */
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
@@ -838,7 +858,7 @@ public class AstarAgent extends Agent {
                 return AstarPath(cheapestLocation);
             }
             expandedLocations.add(cheapestLocation);
-            possibleLocations = cheapestLocation.getReachableNeighbors(enemyFootmanLoc, resourceLocations, agentMap);
+            possibleLocations = cheapestLocation.getReachableNeighbors(agentMap);
 
             for (MapLocation location : possibleLocations) {
                 if (!expandedLocations.contains(location) &&
@@ -873,11 +893,12 @@ public class AstarAgent extends Agent {
         }
     }
 
-    //Chebyshev distance or Manhattan
+    /**
+     * Chebyshev distance
+     */
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
             return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
-           // return manhattanDistance(beginning, end);
         }
         return 0;
     }
