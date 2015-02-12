@@ -12,28 +12,50 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 
+/**
+ * A class for an A* agent in the SEPIA game engine. It utilizes A* search in order to find an optimal path
+ * through the given maze map. The given maze map can be static or dynamic, involving an enemy footman that moves to block
+ * the path of the agent.The agent will recalculate the path using an alternate route to avoid collision with the enemy
+ * when they are close and on the path.
+ *
+ * @author Shaun Howard(smh150), Matt Swartwout(mws85), Devin Schwab
+ */
 public class AstarAgent extends Agent {
 
+    /* The agent map for this A* agent. It is used for each A* search. */
     AgentMap agentMap;
 
+    /**
+     * A map location class for each location on the current map of the A* agent.
+     * Each map location represents a node in the A* search algorithm.
+     * Each map location has an x and y coordinate, a previous map location,
+     * a cost, distance from beginning, heuristic (estimate to end of path), and
+     * neighbor map locations.
+     * </p>
+     * It implements the comparable interface so that it can be compared
+     * within a priority queue in order to achieve fast performance in comparison
+     * with other nodes during A* search. The map locations are compared by
+     * cost with compareTo() and are considered equivalent if they have the same
+     * x and y coordinates.
+     */
     class MapLocation implements Comparable<MapLocation>{
 
-        // The x and y coordinates of this location.
+        /* The x and y coordinates of this location. */
         int x = 0, y = 0;
 
-        // The previously visited map location.
+        /* The previously visited map location. */
         MapLocation previous = null;
 
-        // The cost to reach this location.
+        /* The cost to reach this location. */
         float cost = 0;
 
-        // The distance of this location from the initial location.
+        /* The distance of this location from the initial location.*/
         float distanceFromBeginning = 0;
 
-        // The estimated distance to the end of the path.
+        /* The estimated distance to the end of the path. */
         float heuristic = 0;
 
-        // A map of neighbors, reachable and unreachable.
+        /* A map of neighbors, reachable and unreachable. */
         Map<MapLocation, Boolean> neighbors = new HashMap<>();
 
         /**
@@ -155,11 +177,12 @@ public class AstarAgent extends Agent {
          * @return reachable neighbor locations of this location
          */
         public Set<MapLocation> getReachableNeighbors(AgentMap map) {
-        	
+        	//Get neighbors and initialize iterator for neighbors
             Set<MapLocation> locations = getNeighbors(map);
             Iterator<MapLocation> locationItr = locations.iterator();
             MapLocation curr = null;
-            // Remove any neighbors not reachable from this location.
+
+            //Remove any neighbors not reachable from this location.
             while (locationItr.hasNext()) {
                 curr = locationItr.next();
                 if (map.getResourceLocations().contains(curr) || (map.getEnemyLocation() != null &&
@@ -179,6 +202,8 @@ public class AstarAgent extends Agent {
          */
         public Set<MapLocation> getNeighbors(AgentMap map){
             Set<MapLocation> neighbors = new HashSet<>();
+
+            //Add neighbors of 8 directions to set of neighbors
             neighbors.add(getNorthNeighbor(map));
             neighbors.add(getSouthNeighbor(map));
             neighbors.add(getEastNeighbor(map));
@@ -187,6 +212,8 @@ public class AstarAgent extends Agent {
             neighbors.add(getNorthWestNeighbor(map));
             neighbors.add(getSouthEastNeighbor(map));
             neighbors.add(getSouthWestNeighbor(map));
+
+            //Remove null if any neighbors were not found
             if (neighbors.contains(null)){
                 neighbors.remove(null);
             }
@@ -447,16 +474,22 @@ public class AstarAgent extends Agent {
      * to navigate are stored in the AgentMap, i.e. x and y extents.
      */
     public class AgentMap {
+
         /* the length of the map by rows. */
         int xExtent = 0;
+
         /* the width of the map by columns. */
         int yExtent = 0;
+
         /* the beginning location of the map. */
         MapLocation begin = null;
+
         /* the ending location of the map. */
         MapLocation end = null;
+
         /* the location of the enemy footman on this map. */
         MapLocation enemyFootmanLoc;
+
         /* the locations of resources on this map. */
         Set<MapLocation> resourceLocations = new HashSet<>();
 
@@ -538,20 +571,38 @@ public class AstarAgent extends Agent {
 
     //The current A* path through the map/maze.
     Stack<MapLocation> path;
+
+    //Serial IDs for game components
     int footmanID, townhallID, enemyFootmanID;
+
+    //The next location of the footman to travel along the path through the map
     MapLocation nextLoc;
 
+    //Timing of path planning and execution in game
     private long totalPlanTime = 0; // nsecs
     private long totalExecutionTime = 0; //nsecs
 
+    //Townhall unit and coordinates
     Unit.UnitView townhallUnit;
     int townhallX, townhallY;
-    
+
+    /**
+     * Constructs a new A* agent by player number ID.
+     *
+     * @param playernum - the ID of this agent
+     */
     public AstarAgent(int playernum)
     {
         super(playernum);
     }
 
+    /**
+     * Takes the initial step in the setup of the SEPIA game instance.
+     *
+     * @param newstate - the new state view for the game
+     * @param statehistory - the history of the game thus far
+     * @return a map of actions to execute in the game at this step
+     */
     @Override
     public Map<Integer, Action> initialStep(State.StateView newstate, History.HistoryView statehistory) {
         // get the footman location
@@ -633,6 +684,14 @@ public class AstarAgent extends Agent {
         return middleStep(newstate, statehistory);
     }
 
+    /**
+     * Takes the middle step of the game which executes sequentially with the initial step and runs
+     * until the game is finished running or some victory conditions are reached to exit the game.
+     *
+     * @param newstate - the new state of the game
+     * @param statehistory - the past history of the game
+     * @return a map of actions to take at this step
+     */
     @Override
     public Map<Integer, Action> middleStep(State.StateView newstate, History.HistoryView statehistory) {
     	
@@ -700,6 +759,13 @@ public class AstarAgent extends Agent {
         return actions;
     }
 
+    /**
+     * The final state of the game which prints out statistics about the timing of the
+     * path planning, execution, game turns, and total time taken to run the game overall.
+     *
+     * @param newstate - the game state at this point in time
+     * @param statehistory - the history until this point in time
+     */
     @Override
     public void terminalStep(State.StateView newstate, History.HistoryView statehistory) {
         System.out.println("Total turns: " + newstate.getTurnNumber());
@@ -843,15 +909,19 @@ public class AstarAgent extends Agent {
      * @return Stack of positions with top of stack being first move in plan
      */
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
-
+        //initialization of map locations for the search
         MapLocation cheapestLocation;
         Set<MapLocation> possibleLocations;
     	Set<MapLocation> expandedLocations = new HashSet<>();
         PriorityQueue<MapLocation> openLocations = new PriorityQueue<>();
+
+        //initialization of agent's current map
         agentMap = new AgentMap(xExtent, yExtent, start, goal, resourceLocations);
         agentMap.setEnemyLocation(enemyFootmanLoc);
         agentMap.setEnd(goal);
         initializeSearch(agentMap, expandedLocations, openLocations);
+
+        //run A* to find optimal path through map
         while (!openLocations.isEmpty()) {
             cheapestLocation = openLocations.poll();
             if (cheapestLocation.equals(goal)) {
@@ -894,25 +964,15 @@ public class AstarAgent extends Agent {
     }
 
     /**
-     * Chebyshev distance
+     * Returns the Chebyshev distance between the given beginning and end map locations.
+     *
+     * @return the distance Chebyshev distance between beginning and end map locations
      */
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
             return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
         }
         return 0;
-    }
-
-    private float manhattanDistance(MapLocation beginning, MapLocation end){
-        float xDiff = beginning.getX() - end.getX();
-        float yDiff = beginning.getY() - end.getY();
-        if (xDiff < 0){
-            xDiff = xDiff * -1;
-        }
-        if (yDiff < 0){
-            yDiff = yDiff * -1;
-        }
-        return xDiff + yDiff;
     }
 
     /**
