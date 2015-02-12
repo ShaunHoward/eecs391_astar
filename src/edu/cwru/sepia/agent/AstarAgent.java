@@ -455,8 +455,17 @@ public class AstarAgent extends Agent {
         /* The location of the enemy footman on this map. */
         MapLocation enemyFootmanLoc;
 
+        //The set of all resource locations
         Set<MapLocation> resourceLocations = new HashSet<>();
 
+        /**
+         * 
+         * @param xExtent The xExtent of the map
+         * @param yExtent The yExtent of the map
+         * @param agentStart The agent's start location
+         * @param agentStop
+         * @param resourceLocations The map's resource locations
+         */
         public AgentMap(int xExtent, int yExtent, MapLocation agentStart, MapLocation agentStop, Set<MapLocation> resourceLocations){
             this.xExtent = xExtent;
             this.yExtent = yExtent;
@@ -528,6 +537,16 @@ public class AstarAgent extends Agent {
     Unit.UnitView townhallUnit;
     int townhallX, townhallY;
     
+    Unit.UnitView footmanUnit;
+    int footmanX, footmanY;
+    
+    Unit.UnitView enemyFootmanUnit;
+    MapLocation enemyLocation;
+    
+    MapLocation nextLocation;
+    MapLocation subsequentLocation;
+    float enemyToNextLocation, enemyToSubsequentLocation;
+    
     public AstarAgent(int playernum)
     {
         super(playernum);
@@ -587,6 +606,7 @@ public class AstarAgent extends Agent {
             String unitType = tempUnit.getTemplateView().getName().toLowerCase();
             if(unitType.equals("townhall"))
             {
+            	//These are all declared here so that they can be used to determine if the agent needs to replan its path, without retrieving the values every time
                 townhallID = unitID;
                 townhallUnit = newstate.getUnit(townhallID);
             	townhallX = townhallUnit.getXPosition();
@@ -622,10 +642,11 @@ public class AstarAgent extends Agent {
 
         Map<Integer, Action> actions = new HashMap<Integer, Action>();
 
-        Unit.UnitView footmanUnit = newstate.getUnit(footmanID);
-        int footmanX = footmanUnit.getXPosition();
-    	int footmanY = footmanUnit.getYPosition();
+        footmanUnit = newstate.getUnit(footmanID);
+        footmanX = footmanUnit.getXPosition();
+    	footmanY = footmanUnit.getYPosition();
 
+    	//If the agent is adjacent to the townhall or shouldReplanPath is true, then the path is replanned
         if(!(Math.abs(footmanX -townhallX) <= 1 && Math.abs(footmanY - townhallY) <= 1) && shouldReplanPath(newstate, statehistory, path)) {
             long planStartTime = System.nanoTime();
             path = findPath(newstate);
@@ -644,8 +665,7 @@ public class AstarAgent extends Agent {
             nextLoc = path.pop();
         }
 
-        if(nextLoc != null && (footmanX != nextLoc.x || footmanY != nextLoc.y))
-        {
+        if(nextLoc != null && (footmanX != nextLoc.x || footmanY != nextLoc.y)) {
             int xDiff = nextLoc.x - footmanX;
             int yDiff = nextLoc.y - footmanY;
 
@@ -653,19 +673,18 @@ public class AstarAgent extends Agent {
             Direction nextDirection = getNextDirection(xDiff, yDiff);
 
             actions.put(footmanID, Action.createPrimitiveMove(footmanID, nextDirection));
-        } else {
-        	//Moving htis outside of if-else so that the replan path if can use it
-            //Unit.UnitView townhallUnit = newstate.getUnit(townhallID);
+        } 
+        else {
+
         	townhallUnit = newstate.getUnit(townhallID);
+        	
             // if townhall was destroyed on the last turn
             if(townhallUnit == null) {
                 terminalStep(newstate, statehistory);
                 return actions;
             }
 
-            if(Math.abs(footmanX - townhallUnit.getXPosition()) > 1 ||
-                    Math.abs(footmanY - townhallUnit.getYPosition()) > 1)
-            {
+            if(Math.abs(footmanX - townhallUnit.getXPosition()) > 1 || Math.abs(footmanY - townhallUnit.getYPosition()) > 1) {
                 System.err.println("Invalid plan. Cannot attack townhall");
                 totalExecutionTime += System.nanoTime() - startTime - planTime;
                 return actions;
@@ -711,10 +730,10 @@ public class AstarAgent extends Agent {
     {
        // Unit.UnitView footmanUnit = state.getUnit(footmanID);
        // MapLocation footmanLocation = new MapLocation(footmanUnit.getXPosition(), footmanUnit.getYPosition(), null, 0);
-        MapLocation enemyLocation;
+        
 
         if(enemyFootmanID != -1) {
-            Unit.UnitView enemyFootmanUnit = state.getUnit(enemyFootmanID);
+            enemyFootmanUnit = state.getUnit(enemyFootmanID);
             enemyLocation = new MapLocation(enemyFootmanUnit.getXPosition(), enemyFootmanUnit.getYPosition(), null, 0);
             //check if enemy is on path (via map location) and close to player's next move (i.e. distance <= 2)
             return enemyBlockingPath(enemyLocation, currentPath);
@@ -726,11 +745,11 @@ public class AstarAgent extends Agent {
     //May want to check if enemy is on path if that's how moves happen, i.e. enemy only moves once or something to block path
     private boolean enemyBlockingPath(MapLocation enemyLocation, Stack<MapLocation> currentPath){
         if (!currentPath.isEmpty()) {
-            MapLocation nextLocation = currentPath.peek();
-            float enemyToNextLocation = distanceBetweenLocations(nextLocation, enemyLocation);
+            nextLocation = currentPath.peek();
+            enemyToNextLocation = distanceBetweenLocations(nextLocation, enemyLocation);
             if (currentPath.size() > 2){
-                MapLocation subsequentLocation = currentPath.get(currentPath.size() - 2);
-                float enemyToSubsequentLocation = distanceBetweenLocations(subsequentLocation, enemyLocation);
+                subsequentLocation = currentPath.get(currentPath.size() - 2);
+                enemyToSubsequentLocation = distanceBetweenLocations(subsequentLocation, enemyLocation);
                 //check if enemy is near the next location or subsequent location of footman along path
                 return (enemyToNextLocation <= 1 || enemyToSubsequentLocation <= 1);
             }
